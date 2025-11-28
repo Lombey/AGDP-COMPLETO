@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGDP Dashboard | React</title>
+    
+    <!-- 1. REACT CORE -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- 2. ICONOS Y FUENTES -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- 3. ESTILOS CSS NATIVOS (Movemos todo aquí para garantizar la carga) -->
+    <style>
+        :root {
+            --primary: #204B42; 
+            --primary-hover: #163630;
+            --bg-body: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-light: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6; 
+            --header-height: 64px;
+            --sidebar-width: 240px;
+        }
+
+        body.dark-mode {
+            --primary: #2d6a5e;
+            --bg-body: #0f172a;       
+            --surface: #1e293b;       
+            --border: #334155;        
+            --text-main: #f1f5f9;     
+            --text-light: #94a3b8;    
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); height: 100vh; overflow: hidden; }
+
+        /* Loader inicial */
+        #root:empty::before {
+            content: 'Iniciando AGDP System...';
+            display: flex; height: 100vh; justify-content: center; 
+            align-items: center; color: var(--primary); font-weight: 600;
+        }
+
+        /* LAYOUT PRINCIPAL */
+        .app-container { display: flex; flex-direction: column; height: 100vh; }
+        .main-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
+
+        /* HEADER */
+        header { background-color: #204B42; height: var(--header-height); padding: 0 1.5rem; display: flex; justify-content: space-between; align-items: center; color: white; flex-shrink: 0; z-index: 50; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .brand { display: flex; align-items: center; gap: 1rem; }
+        .brand h1 { font-size: 1.1rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+        .logo-box { width:32px; height:32px; background:white; color:#204B42; font-weight:bold; display:flex; align-items:center; justify-content:center; border-radius:4px; font-size: 0.8rem; }
+        .version-badge { font-size: 0.7rem; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-weight: 400; opacity: 0.9; }
+        
+        .header-actions { display: flex; gap: 0.8rem; align-items: center; }
+        .user-type-badge { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem; }
+        .nav-icon-btn { background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; transition: background 0.2s; }
+        .nav-icon-btn:hover { background: rgba(255,255,255,0.25); }
+        .notif-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 1px solid #204B42; }
+        
+        .user-profile { display: flex; align-items: center; gap: 0.5rem; background: white; color: #204B42; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
+        .user-profile:hover { transform: translateY(-1px); }
+
+        /* SIDEBAR */
+        .sidebar { width: var(--sidebar-width); background-color: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding-top: 1rem; transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 40; flex-shrink: 0; }
+        .sidebar.collapsed { margin-left: calc(var(--sidebar-width) * -1); }
+        .sidebar-item { display: flex; gap: 0.8rem; padding: 0.8rem 1.5rem; color: var(--text-light); cursor: pointer; font-size: 0.9rem; align-items: center; text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s; font-weight: 500; }
+        .sidebar-item:hover { background: var(--bg-body); color: var(--primary); }
+        .sidebar-item.active { color: var(--primary); background: rgba(32, 75, 66, 0.08); border-left-color: var(--primary); }
+        .sidebar-footer { margin-top: auto; padding: 1rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+
+        /* DASHBOARD CONTENT */
+        .dashboard-content { flex: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.5rem; background-color: var(--bg-body); }
+
+        /* KPI CARDS */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+        .kpi-card { background: var(--surface); border: 1px solid var(--border); padding: 1.25rem; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 0.5rem; position: relative; }
+        .kpi-card.clickable { cursor: pointer; transition: border-color 0.2s, transform 0.1s; }
+        .kpi-card.clickable:hover { border-color: var(--primary); transform: translateY(-1px); }
+        .kpi-header { display: flex; justify-content: space-between; align-items: center; color: var(--text-light); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-label { display: flex; gap: 0.5rem; align-items: center; }
+        .kpi-value { font-size: 1.75rem; font-weight: 700; color: var(--text-main); line-height: 1.2; }
+        .kpi-sub { font-size: 0.8rem; color: var(--text-light); }
+        .unit-badge { font-size: 0.65rem; background: var(--bg-body); padding: 2px 8px; border-radius: 12px; display: flex; gap: 4px; align-items: center; border: 1px solid var(--border); font-weight: 700; color: var(--primary); }
+
+        /* FILTERS PANEL */
+        .filters-panel { background: var(--surface); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 1.25rem; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+        .filters-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+        .actions-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 1rem; flex-wrap: wrap; gap: 1rem; }
+        
+        .form-input, .form-select { padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-body); color: var(--text-main); font-size: 0.85rem; height: 38px; outline: none; transition: border-color 0.2s; font-family: inherit; }
+        .form-input:focus, .form-select:focus { border-color: var(--primary); }
+        .date-input-wrapper { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-light); font-weight: 500; }
+        
+        .btn-group { display: flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; height: 38px; }
+        .btn-group-item { background: var(--surface); border: none; padding: 0 1rem; cursor: pointer; font-size: 0.85rem; border-right: 1px solid var(--border); display: flex; gap: 0.5rem; align-items: center; color: var(--text-light); transition: background 0.2s; }
+        .btn-group-item:last-child { border-right: none; }
+        .btn-group-item:hover { background: var(--bg-body); color: var(--text-main); }
+        .btn-group-item.active { background: var(--primary); color: white; }
+
+        .btn { padding: 0 1rem; height: 38px; border-radius: 6px; border: 1px solid transparent; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 500; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-outline { border-color: var(--border); background: transparent; color: var(--text-main); }
+        .btn-outline:hover { background-color: var(--bg-body); border-color: var(--text-light); }
+        .btn-outline-danger { border-color: var(--border); background: transparent; color: var(--danger); }
+        .btn-outline-danger:hover { background: #fef2f2; border-color: var(--danger); }
+        .btn-icon { background: transparent; border: none; color: var(--text-light); cursor: pointer; padding: 4px; border-radius: 4px; display: flex; }
+        .btn-icon:hover { background: var(--bg-body); color: var(--primary); }
+
+        /* GRID & CHARTS LAYOUT */
+        .stats-layout { display: grid; grid-template-columns: 3fr 1fr; gap: 1.5rem; min-height: 500px; }
+        .table-wrapper { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: auto; box-shadow: 0 1px 2px rgba(0,0,0,0.03); display: flex; flex-direction: column; }
+        
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.85rem; }
+        .data-table th { background: var(--bg-body); padding: 0.75rem 1rem; text-align: left; position: sticky; top: 0; font-weight: 600; color: var(--text-light); border-bottom: 1px solid var(--border); white-space: nowrap; z-index: 10; }
+        .data-table td { padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-main); vertical-align: middle; white-space: nowrap; }
+        .data-table tr:hover td { background-color: var(--bg-body); }
+        
+        .row-group td { background: var(--bg-body); font-weight: 600; color: var(--primary); }
+        .badge-group { background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; border: 1px solid #bfdbfe; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .font-mono { font-family: 'Monaco', 'Consolas', monospace; letter-spacing: -0.5px; }
+
+        /* SIDEBAR CHARTS */
+        .charts-sidebar { display: flex; flex-direction: column; gap: 1rem; }
+        .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; flex: 1; display: flex; flex-direction: column; max-height: 350px; min-height: 200px; }
+        .chart-card h4 { margin: 0 0 1rem 0; font-size: 0.8rem; color: var(--text-light); text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+        .chart-container, .list-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.6rem; padding-right: 4px; }
+        
+        /* SCROLLBAR CUSTOM */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .bar-row, .list-item { display: flex; align-items: center; gap: 0.75rem; font-size: 0.8rem; }
+        .bar-label, .list-label { width: 100px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; text-align: right; color: var(--text-light); }
+        .bar-track { flex: 1; background: var(--bg-body); height: 8px; border-radius: 4px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease-out; }
+        .bar-val, .list-val { width: 70px; text-align: right; font-weight: 600; color: var(--text-main); }
+
+        /* NOTIFICATIONS & DROPDOWN */
+        .dropdown { position: absolute; top: 50px; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; width: 320px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); color: var(--text-main); z-index: 100; overflow: hidden; animation: slideDown 0.2s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .dd-header { padding: 0.8rem 1rem; border-bottom: 1px solid var(--border); font-weight: 600; background: var(--bg-body); font-size: 0.85rem; color: var(--text-light); }
+        .dd-item { padding: 0.8rem 1rem; border-bottom: 1px solid var(--border); display: flex; gap: 0.8rem; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; }
+        .dd-item:hover { background: var(--bg-body); }
+        .dd-item:last-child { border-bottom: none; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); opacity: 0; animation: fadeIn 0.2s forwards; }
+        @keyframes fadeIn { to { opacity: 1; } }
+        .modal-card { background: var(--surface); width: 100%; max-width: 500px; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); transform: scale(0.95); animation: scaleUp 0.2s forwards; }
+        @keyframes scaleUp { to { transform: scale(1); } }
+        .modal-card.modal-lg { max-width: 900px; height: 80vh; }
+        .modal-header { padding: 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 1.1rem; }
+        .form-grid { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .form-label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); }
+        .section-title { font-size: 0.9rem; font-weight: 600; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-top: 1rem; }
+        .password-wrapper { position: relative; }
+        .toggle-pass-btn { position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-light); }
+        .modal-footer { padding: 1.25rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.75rem; background: var(--bg-body); border-radius: 0 0 12px 12px; }
+
+        /* RESPONSIVE */
+        @media (max-width: 1024px) { .stats-layout { grid-template-columns: 1fr; } .chart-card { max-height: none; } }
+        @media (max-width: 768px) { 
+            .sidebar { position: fixed; height: 100%; left: -100%; box-shadow: 5px 0 15px rgba(0,0,0,0.1); } 
+            .sidebar.mobile-open { left: 0; } 
+            .filters-row, .actions-row { flex-direction: column; align-items: stretch; }
+            .user-type-badge, .brand span { display: none; }
+            .kpi-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- 4. LÓGICA REACT -->
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+        
+        // --- CONFIGURACIÓN DE ICONOS ---
+        const IconWrapper = ({ children, size=24, color="currentColor", ...props }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>
+        );
+
+        // Iconos Lucide Manuales (Para evitar dependencias externas fallidas)
+        const Icons = {
+            Moon: (p) => <IconWrapper {...p}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></IconWrapper>,
+            Sun: (p) => <IconWrapper {...p}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></IconWrapper>,
+            Bell: (p) => <IconWrapper {...p}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></IconWrapper>,
+            CloudDownload: (p) => <IconWrapper {...p}><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/></IconWrapper>,
+            User: (p) => <IconWrapper {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></IconWrapper>,
+            Menu: (p) => <IconWrapper {...p}><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></IconWrapper>,
+            Settings: (p) => <IconWrapper {...p}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></IconWrapper>,
+            Download: (p) => <IconWrapper {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconWrapper>,
+            Layers: (p) => <IconWrapper {...p}><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></IconWrapper>,
+            ChevronLeft: (p) => <IconWrapper {...p}><path d="m15 18-6-6 6-6"/></IconWrapper>,
+            ChevronRight: (p) => <IconWrapper {...p}><path d="m9 18 6-6-6-6"/></IconWrapper>,
+            X: (p) => <IconWrapper {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconWrapper>,
+            Eye: (p) => <IconWrapper {...p}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></IconWrapper>,
+            EyeOff: (p) => <IconWrapper {...p}><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></IconWrapper>,
+            AlertOctagon: (p) => <IconWrapper {...p}><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></IconWrapper>,
+            AlertTriangle: (p) => <IconWrapper {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></IconWrapper>,
+            Edit2: (p) => <IconWrapper {...p}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></IconWrapper>,
+            Trash2: (p) => <IconWrapper {...p}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconWrapper>,
+            Grid: (p) => <IconWrapper {...p}><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></IconWrapper>,
+            FileSpreadsheet: (p) => <IconWrapper {...p}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h2"/><path d="M14 13h2"/><path d="M8 17h2"/><path d="M14 17h2"/></IconWrapper>,
+            FileText: (p) => <IconWrapper {...p}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></IconWrapper>,
+            Maximize: (p) => <IconWrapper {...p}><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></IconWrapper>,
+            Map: (p) => <IconWrapper {...p}><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="21"/><line x1="15" x2="15" y1="3" y2="21"/></IconWrapper>,
+            ArrowUpDown: (p) => <IconWrapper {...p}><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></IconWrapper>,
+            MapPin: (p) => <IconWrapper {...p}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></IconWrapper>
+        };
+
+        const IconCosechadora = ({ size = 24, color = "currentColor" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="8" cy="17" r="3" />
+                <circle cx="19" cy="17" r="2" />
+                <path d="M4 17L4 12L7 12L9 8H16L18 12H21V17" />
+                <path d="M1 14L4 14" />
+                <path d="M1 11L4 12" />
+                <path d="M1 17L4 16" />
+                <path d="M4 11V17" /> 
+                <path d="M12 8L10 4L16 3" />
+            </svg>
+        );
+
+        const IconTolva = ({ size = 24, color = "currentColor" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="7.5" cy="17.5" r="2.5" />
+                <circle cx="15.5" cy="17.5" r="2.5" />
+                <circle cx="20.5" cy="18.5" r="1.5" />
+                <path d="M3 10L5 17H10L12 10H3Z" />
+                <path d="M3 10L2 8H13L12 10" />
+                <path d="M8 10L8 5L2 5" />
+                <path d="M13 17H18V12H13" />
+                <path d="M13 12L14 9H17L18 12" />
+                <path d="M18 14H22L23 18" />
+                <path d="M10 16H13" />
+            </svg>
+        );
+
+        // --- URLS Y UTILIDADES ---
+        const URL_MANIAGRO = "https://docs.google.com/spreadsheets/d/1IDhJ8E7h5d7ezknTK-BaJkF66ydHAy4zZAv4FLl9u0k/edit?usp=sharing";
+
+        const parseCSVLine = (text) => {
+            let p = '', row = [''], i = 0, r = 0, s = !0, l;
+            for (l of text) {
+                if ('"' === l) { if (s && l === p) row[r] += l; s = !s; } 
+                else if (',' === l && s) l = row[++r] = ''; 
+                else row[r] += l; p = l;
+            }
+            return row;
+        };
+
+        const parseDateStrict = (str) => {
+            if(!str) return null; 
+            const s = str.replace(/-/g, '/'); 
+            const parts = s.split('/'); 
+            if (parts.length !== 3) return null; 
+            let d, m, y; 
+            if (parts[0].length === 4) { y = parseInt(parts[0]); m = parseInt(parts[1]) - 1; d = parseInt(parts[2]); } 
+            else { d = parseInt(parts[0]); m = parseInt(parts[1]) - 1; y = parseInt(parts[2]); } 
+            const date = new Date(y, m, d); 
+            return isNaN(date.getTime()) ? null : date;
+        };
+
+        // --- COMPONENTES VISUALES ---
+        const KPICard = ({ label, value, subtext, icon, onClick, activeUnit }) => (
+            <div className={`kpi-card ${onClick ? 'clickable' : ''}`} onClick={onClick}>
+                <div className="kpi-header">
+                    <div className="kpi-label">{icon} {label}</div>
+                    {onClick && (
+                        <div className="unit-badge">
+                            {activeUnit} <Icons.ArrowUpDown size={10} />
+                        </div>
+                    )}
+                </div>
+                <div className="kpi-value">{value}</div>
+                <div className="kpi-sub">{subtext}</div>
+            </div>
+        );
+
+        const SimpleBarChart = ({ data, unit }) => {
+            if (!data || data.length === 0) return <div className="no-data">Sin datos</div>;
+            const maxVal = Math.max(...data.map(d => d.value));
+            return (
+                <div className="chart-container">
+                    {data.slice(0, 8).map((item, idx) => (
+                        <div key={idx} className="bar-row">
+                            <div className="bar-label" title={item.label}>{item.label}</div>
+                            <div className="bar-track">
+                                <div 
+                                    className="bar-fill" 
+                                    style={{ 
+                                        width: `${(item.value / maxVal) * 100}%`,
+                                        backgroundColor: `hsl(${160 + (idx * 20)}, 40%, 40%)`
+                                    }}
+                                ></div>
+                            </div>
+                            <div className="bar-val">
+                                {(unit === 'TON' ? (item.value/1000).toFixed(0) : item.value.toFixed(0))} {unit === 'TON' ? 't' : 'kg'}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        const RankingList = ({ data, unit }) => {
+            if (!data || data.length === 0) return <div className="no-data">Sin datos</div>;
+            return (
+                <div className="list-container">
+                    {data.slice(0, 8).map((item, idx) => (
+                        <div key={idx} className="list-item">
+                            <div className="list-label" title={item.label}>{item.label}</div>
+                            <div className="list-val">
+                                {(unit === 'TON' ? (item.value/1000).toFixed(1) : item.value.toLocaleString())} {unit === 'TON' ? 't' : 'kg'}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        const ProfileModal = ({ isOpen, onClose, user, onSave }) => {
+            if (!isOpen) return null;
+            const [formData, setFormData] = useState({ ...user });
+            const [showPass, setShowPass] = useState({ old: false, new: false, confirm: false });
+
+            return (
+                <div className="modal-overlay">
+                    <div className="modal-card">
+                        <div className="modal-header">
+                            <h3>Mi Perfil</h3>
+                            <button className="btn-icon" onClick={onClose}><Icons.X size={20}/></button>
+                        </div>
+                        <div className="form-grid">
+                            <div className="form-group">
+                                <label className="form-label">Nombre</label>
+                                <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="form-input" />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Apellido</label>
+                                <input value={formData.lastname} onChange={e => setFormData({...formData, lastname: e.target.value})} className="form-input" />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Email</label>
+                                <input value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="form-input" />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Teléfono</label>
+                                <input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="form-input" />
+                            </div>
+                            
+                            <div className="section-title">Cambiar Contraseña</div>
+                            {['old', 'new', 'confirm'].map(field => (
+                                <div className="form-group" key={field}>
+                                    <label className="form-label">{field === 'old' ? 'Clave Anterior' : field === 'new' ? 'Nueva Clave' : 'Confirmar'}</label>
+                                    <div className="password-wrapper">
+                                        <input type={showPass[field] ? "text" : "password"} className="form-input" style={{paddingRight: '2.5rem'}} />
+                                        <button className="toggle-pass-btn" onClick={() => setShowPass({...showPass, [field]: !showPass[field]})}>
+                                            {showPass[field] ? <Icons.EyeOff size={16}/> : <Icons.Eye size={16}/>}
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+                            <button className="btn btn-primary" onClick={() => onSave(formData)}>Guardar Perfil</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const MapModal = ({ isOpen, onClose }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="modal-overlay">
+                    <div className="modal-card modal-lg" style={{height:'80vh'}}>
+                        <div className="modal-header">
+                            <h3>Geolocalización</h3>
+                            <button className="btn-icon" onClick={onClose}><Icons.X size={20}/></button>
+                        </div>
+                        <div style={{flex:1, background:'#e2e8f0', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', color:'var(--text-light)'}}>
+                            <Icons.MapPin size={48} opacity={0.5} />
+                            <p>Mapa Global de Descargas</p>
+                            <span style={{fontSize:'0.8rem'}}>(Vista de Mapa Simulada)</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const DashboardContent = () => {
+            const [rawData, setRawData] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [activeSheet, setActiveSheet] = useState(URL_MANIAGRO);
+            const [showMap, setShowMap] = useState(false);
+            
+            const [filters, setFilters] = useState({
+                dateFrom: '', dateTo: '',
+                est: '', lote: '', prod: '', tolva: '', productor: '', contratista: '',
+                destinationType: 'ALL',
+                hideLow: true,
+                groupBy: ''
+            });
+
+            const [displayUnit, setDisplayUnit] = useState('TON');
+
+            useEffect(() => {
+                const fetchData = async () => {
+                    setLoading(true);
+                    try {
+                        const match = activeSheet.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                        if (!match) throw new Error("URL inválida");
+                        const csvUrl = `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv`;
+                        const response = await fetch(csvUrl);
+                        const text = await response.text();
+                        const lines = text.split('\n');
+                        const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+                        const parsed = lines.slice(1).map((line, idx) => {
+                            if (!line.trim()) return null;
+                            const vals = parseCSVLine(line);
+                            const obj = { id: idx };
+                            headers.forEach((h, i) => obj[h] = vals[i]?.trim().replace(/^"|"$/g, '') || '');
+                            obj.PESO_NUM = parseFloat(obj['PESO HUMEDO Kg']) || 0;
+                            obj.DATE_OBJ = parseDateStrict(obj['FECHA PESADA']);
+                            return obj;
+                        }).filter(Boolean);
+                        setRawData(parsed);
+                    } catch (err) { console.error(err); } finally { setLoading(false); }
+                };
+                fetchData();
+            }, [activeSheet]);
+
+            const filteredData = useMemo(() => {
+                return rawData.filter(row => {
+                    if (filters.hideLow && row.PESO_NUM < 100) return false;
+                    if (filters.dateFrom) {
+                        const from = new Date(filters.dateFrom);
+                        if (row.DATE_OBJ && row.DATE_OBJ < from) return false;
+                    }
+                    if (filters.dateTo) {
+                        const to = new Date(filters.dateTo);
+                        to.setHours(23,59,59);
+                        if (row.DATE_OBJ && row.DATE_OBJ > to) return false;
+                    }
+                    if (filters.est && row['ESTABLECIMIENTO'] !== filters.est) return false;
+                    if (filters.lote && row['LOTE'] !== filters.lote) return false;
+                    if (filters.prod && row['PRODUCTO'] !== filters.prod) return false;
+                    if (filters.productor && row['PRODUCTOR'] !== filters.productor) return false;
+                    if (filters.contratista && row['CONTRATISTA'] !== filters.contratista) return false;
+                    if (filters.tolva && row['TOLVA'] !== filters.tolva) return false;
+                    
+                    if (filters.destinationType !== 'ALL') {
+                        const dest = (row['DESTINO DESCARGA'] || '').toUpperCase();
+                        const isSilo = dest.includes('SILO') || dest.includes('BOLSA');
+                        if (filters.destinationType === 'SILO' && !isSilo) return false;
+                        if (filters.destinationType === 'TRUCK' && isSilo) return false;
+                    }
+                    return true;
+                });
+            }, [rawData, filters]);
+
+            const displayData = useMemo(() => {
+                if (!filters.groupBy) return filteredData;
+                const groups = {};
+                filteredData.forEach(row => {
+                    const key = row['DESTINO DESCARGA'] || 'Sin Destino';
+                    if (!groups[key]) groups[key] = { ...row, count: 0, PESO_NUM: 0, isGroup: true };
+                    groups[key].count += 1;
+                    groups[key].PESO_NUM += row.PESO_NUM;
+                });
+                return Object.values(groups);
+            }, [filteredData, filters.groupBy]);
+
+            const kpis = useMemo(() => {
+                let truckC = 0, truckW = 0, siloC = 0, siloW = 0;
+                filteredData.forEach(r => {
+                    const dest = (r['DESTINO DESCARGA'] || '').toUpperCase();
+                    const isSilo = dest.includes('SILO') || dest.includes('BOLSA');
+                    if (isSilo) { siloC++; siloW += r.PESO_NUM; }
+                    else { truckC++; truckW += r.PESO_NUM; }
+                });
+                return { truckC, truckW, siloC, siloW };
+            }, [filteredData]);
+
+            const chartDataEst = useMemo(() => {
+                const map = {};
+                filteredData.forEach(r => { const k = r['ESTABLECIMIENTO'] || 'Sin Datos'; map[k] = (map[k] || 0) + r.PESO_NUM; });
+                return Object.entries(map).sort((a,b) => b[1] - a[1]).map(([label, value]) => ({ label, value }));
+            }, [filteredData]);
+
+            const listDataTolva = useMemo(() => {
+                const map = {};
+                filteredData.forEach(r => { const k = r['TOLVA'] || '-'; map[k] = (map[k] || 0) + r.PESO_NUM; });
+                return Object.entries(map).sort((a,b) => b[1] - a[1]).map(([label, value]) => ({ label, value }));
+            }, [filteredData]);
+
+            const listDataContratista = useMemo(() => {
+                const map = {};
+                filteredData.forEach(r => { const k = r['CONTRATISTA'] || '-'; map[k] = (map[k] || 0) + r.PESO_NUM; });
+                return Object.entries(map).sort((a,b) => b[1] - a[1]).map(([label, value]) => ({ label, value }));
+            }, [filteredData]);
+
+            const getOptions = (key) => [...new Set(rawData.map(r => r[key]).filter(Boolean))].sort();
+
+            return (
+                <div className="dashboard-content">
+                    <div className="kpi-grid">
+                        <KPICard label="Camiones" icon={<IconTolva size={18} />} value={kpis.truckC} subtext="Viajes" />
+                        <KPICard label="Volumen Camión" icon={<Icons.Download size={18} />} value={displayUnit === 'TON' ? (kpis.truckW/1000).toFixed(1) : kpis.truckW.toLocaleString()} subtext={displayUnit === 'TON' ? 'Toneladas' : 'Kg Húmedo'} onClick={() => setDisplayUnit(prev => prev === 'TON' ? 'KG' : 'TON')} activeUnit={displayUnit} />
+                        <KPICard label="Silos" icon={<Icons.Layers size={18} />} value={kpis.siloC} subtext="Cargas" />
+                        <KPICard label="Volumen Silo" icon={<IconCosechadora size={18} />} value={displayUnit === 'TON' ? (kpis.siloW/1000).toFixed(1) : kpis.siloW.toLocaleString()} subtext={displayUnit === 'TON' ? 'Toneladas' : 'Kg Húmedo'} onClick={() => setDisplayUnit(prev => prev === 'TON' ? 'KG' : 'TON')} activeUnit={displayUnit} />
+                    </div>
+
+                    <div className="filters-panel">
+                        <div className="filters-row">
+                            <div className="date-input-wrapper">
+                                <span>Desde:</span> <input type="date" className="form-input" onChange={e => setFilters({...filters, dateFrom: e.target.value})} />
+                            </div>
+                            <div className="date-input-wrapper">
+                                <span>Hasta:</span> <input type="date" className="form-input" onChange={e => setFilters({...filters, dateTo: e.target.value})} />
+                            </div>
+                            
+                            <select className="form-select" onChange={e => setFilters({...filters, productor: e.target.value})}>
+                                <option value="">Productor...</option>
+                                {getOptions('PRODUCTOR').map(o => <option key={o} value={o}>{o}</option>)}
+                            </select>
+                            <select className="form-select" onChange={e => setFilters({...filters, est: e.target.value})}>
+                                <option value="">Establecimiento...</option>
+                                {getOptions('ESTABLECIMIENTO').map(o => <option key={o} value={o}>{o}</option>)}
+                            </select>
+                            <select className="form-select" onChange={e => setFilters({...filters, lote: e.target.value})}>
+                                <option value="">Lote...</option>
+                                {getOptions('LOTE').map(o => <option key={o} value={o}>{o}</option>)}
+                            </select>
+                            <select className="form-select" onChange={e => setFilters({...filters, contratista: e.target.value})}>
+                                <option value="">Contratista...</option>
+                                {getOptions('CONTRATISTA').map(o => <option key={o} value={o}>{o}</option>)}
+                            </select>
+                            <select className="form-select" onChange={e => setFilters({...filters, tolva: e.target.value})}>
+                                <option value="">Tolva...</option>
+                                {getOptions('TOLVA').map(o => <option key={o} value={o}>{o}</option>)}
+                            </select>
+
+                            <div className="btn-group">
+                                <button className={`btn-group-item ${filters.destinationType === 'ALL' ? 'active' : ''}`} onClick={() => setFilters({...filters, destinationType: 'ALL'})}>Todos</button>
+                                <button className={`btn-group-item ${filters.destinationType === 'TRUCK' ? 'active' : ''}`} onClick={() => setFilters({...filters, destinationType: 'TRUCK'})}><IconTolva size={14}/> Camión</button>
+                                <button className={`btn-group-item ${filters.destinationType === 'SILO' ? 'active' : ''}`} onClick={() => setFilters({...filters, destinationType: 'SILO'})}><Icons.Layers size={14}/> Silo</button>
+                            </div>
+                            
+                            <label className="toggle-label" style={{fontSize:'0.8rem', display:'flex', alignItems:'center', gap:'0.5rem', cursor:'pointer'}}>
+                                <input type="checkbox" checked={filters.hideLow} onChange={e => setFilters({...filters, hideLow: e.target.checked})} />
+                                Ocultar &lt; 100kg
+                            </label>
+                        </div>
+                        
+                        <div className="actions-row">
+                            <div style={{display:'flex', gap:'0.5rem', alignItems:'center'}}>
+                                <span style={{fontSize:'0.8rem', fontWeight:'600', color:'var(--text-light)'}}>AGRUPAR:</span>
+                                <button 
+                                    className={`btn ${filters.groupBy === 'DESTINO' ? 'btn-primary' : 'btn-outline'}`} 
+                                    onClick={() => setFilters(f => ({...f, groupBy: f.groupBy ? '' : 'DESTINO'}))}
+                                >
+                                    <Icons.Grid size={14} style={{marginRight:4}}/> Destinos
+                                </button>
+                                <button className="btn btn-outline-danger" onClick={() => setFilters({dateFrom:'', dateTo:'', est:'', lote:'', prod:'', tolva:'', productor:'', contratista:'', destinationType:'ALL', hideLow:true, groupBy:''})} title="Limpiar Filtros">
+                                    <Icons.Trash2 size={16}/>
+                                </button>
+                            </div>
+                            
+                            <div style={{display:'flex', gap:'0.5rem'}}>
+                                <button className="btn btn-outline" title="Exportar CSV"><Icons.FileSpreadsheet size={18}/></button>
+                                <button className="btn btn-outline" title="Exportar PDF"><Icons.FileText size={18}/></button>
+                                <button className="btn btn-outline" title="Pantalla Completa"><Icons.Maximize size={18}/></button>
+                                <button className="btn btn-primary" onClick={() => setShowMap(true)}><Icons.Map size={18} style={{marginRight:4}}/> Ver Mapa Global</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="stats-layout">
+                        <div className="table-wrapper">
+                            {loading ? <div className="loading-state" style={{padding:'2rem', textAlign:'center'}}>Cargando datos...</div> : (
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            {!filters.groupBy && <th style={{width:30}}><input type="checkbox"/></th>}
+                                            <th>Estado</th>
+                                            <th>{filters.groupBy ? 'Grupo / Destino' : 'Fecha'}</th>
+                                            {!filters.groupBy && <th>Hora</th>}
+                                            {!filters.groupBy && <th>Productor</th>}
+                                            {!filters.groupBy && <th>Establecimiento</th>}
+                                            {!filters.groupBy && <th>Lote</th>}
+                                            {!filters.groupBy && <th>Producto</th>}
+                                            {!filters.groupBy && <th>Destino</th>}
+                                            {!filters.groupBy && <th>C. Porte</th>}
+                                            {!filters.groupBy && <th>Contratista</th>}
+                                            {!filters.groupBy && <th>Tolva</th>}
+                                            <th className="text-right">Peso ({displayUnit})</th>
+                                            {!filters.groupBy && <th>Acciones</th>}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {displayData.slice(0, 100).map((row, idx) => (
+                                            <tr key={idx} className={row.isGroup ? 'row-group' : ''}>
+                                                {!filters.groupBy && <td><input type="checkbox"/></td>}
+                                                <td className="text-center">
+                                                    {row.isGroup ? <span className="badge-group">{row.count} Regs</span> : (
+                                                        row.PESO_NUM > 30000 ? <Icons.AlertTriangle size={16} color="var(--warning)" /> : 
+                                                        <div style={{width:8, height:8, borderRadius:'50%', background:'var(--success)', margin:'0 auto'}}></div>
+                                                    )}
+                                                </td>
+                                                <td>{row.isGroup ? row['DESTINO DESCARGA'] : row['FECHA PESADA']}</td>
+                                                {!filters.groupBy && <td>{row['HORA PESADA']}</td>}
+                                                {!filters.groupBy && <td>{row['PRODUCTOR']}</td>}
+                                                {!filters.groupBy && <td>{row['ESTABLECIMIENTO']}</td>}
+                                                {!filters.groupBy && <td>{row['LOTE']}</td>}
+                                                {!filters.groupBy && <td>{row['PRODUCTO']}</td>}
+                                                {!filters.groupBy && <td>{row['DESTINO DESCARGA']}</td>}
+                                                {!filters.groupBy && <td>{row['CARTA DE PORTE']}</td>}
+                                                {!filters.groupBy && <td>{row['CONTRATISTA']}</td>}
+                                                {!filters.groupBy && <td>{row['TOLVA']}</td>}
+                                                <td className="text-right font-mono">
+                                                    {displayUnit === 'TON' ? (row.PESO_NUM/1000).toFixed(2) : row.PESO_NUM.toLocaleString()}
+                                                </td>
+                                                {!filters.groupBy && <td className="text-center"><button className="btn-icon"><Icons.Edit2 size={14}/></button></td>}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+
+                        <div className="charts-sidebar">
+                            <div className="chart-card">
+                                <h4>Totales por Establecimiento</h4>
+                                <SimpleBarChart data={chartDataEst} unit={displayUnit} />
+                            </div>
+                            <div className="chart-card">
+                                <h4>Ranking Tolvas</h4>
+                                <RankingList data={listDataTolva} unit={displayUnit} />
+                            </div>
+                            <div className="chart-card">
+                                <h4>Ranking Contratistas</h4>
+                                <RankingList data={listDataContratista} unit={displayUnit} />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <MapModal isOpen={showMap} onClose={() => setShowMap(false)} />
+                </div>
+            );
+        };
+
+        const Header = ({ darkMode, toggleDarkMode, toggleSidebar, user, onEditProfile }) => {
+            const [showNotif, setShowNotif] = useState(false);
+            const alerts = [
+                { type: 'Modificación en Tolva', color: 'var(--info)', msg: 'El tolvero modificó humedad.', time: '14:30' },
+                { type: 'Sobrepeso', color: 'var(--warning)', msg: 'Exceso de peso detectado.', time: '12:15' },
+                { type: 'Descarga Defectuosa', color: 'var(--danger)', msg: 'Falla en sensor.', time: '10:45' }
+            ];
+
+            return (
+                <header>
+                    <div className="brand">
+                        <button className="nav-icon-btn" onClick={toggleSidebar} style={{marginRight:'1rem'}}><Icons.Menu size={24}/></button>
+                        <div className="logo-box">AG</div>
+                        <h1>Descargas <span>| AGDP</span> <span className="version-badge">v4.23</span></h1>
+                    </div>
+                    <div className="header-actions">
+                        <div className="user-type-badge">Productor: <strong>2218PH</strong></div>
+                        <button className="nav-icon-btn" onClick={toggleDarkMode}>{darkMode ? <Icons.Sun size={20}/> : <Icons.Moon size={20}/>}</button>
+                        
+                        <div style={{position:'relative'}}>
+                            <button className="nav-icon-btn" onClick={() => setShowNotif(!showNotif)}>
+                                <Icons.Bell size={20}/> <span className="notif-dot"></span>
+                            </button>
+                            {showNotif && (
+                                <div className="dropdown">
+                                    <div className="dd-header">Alertas Recientes</div>
+                                    {alerts.map((a,i) => (
+                                        <div key={i} className="dd-item">
+                                            <Icons.AlertOctagon size={14} color={a.color} style={{marginTop:2}}/>
+                                            <div><div style={{fontWeight:600}}>{a.type}</div><div style={{fontSize:'0.8rem'}}>{a.msg}</div></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <button className="nav-icon-btn"><Icons.CloudDownload size={20}/></button>
+                        <div className="user-profile" onClick={onEditProfile}>
+                            <Icons.User size={20}/> <span>{user.name}</span>
+                        </div>
+                    </div>
+                </header>
+            );
+        };
+
+        const Sidebar = ({ activeTab, setActiveTab, collapsed, toggleCollapse }) => {
+            const items = [
+                { id: 'descargas', label: 'Descargas', icon: <Icons.Download size={20}/> },
+                { id: 'campanas', label: 'Campañas', icon: <Icons.Layers size={20}/> },
+                { id: 'tolvas', label: 'Tolvas', icon: <IconTolva size={22}/> },
+                { id: 'cosechadoras', label: 'Cosechadoras', icon: <IconCosechadora size={22}/> },
+                { id: 'configuracion', label: 'Configuración', icon: <Icons.Settings size={20}/> },
+            ];
+            return (
+                <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+                    {items.map(i => (
+                        <div key={i.id} className={`sidebar-item ${activeTab===i.id ? 'active' : ''}`} onClick={() => setActiveTab(i.id)}>
+                            {i.icon} <span>{i.label}</span>
+                        </div>
+                    ))}
+                    <div className="sidebar-footer">
+                        <button className="nav-icon-btn" style={{color:'var(--text-light)', marginLeft:'auto'}} onClick={toggleCollapse}>
+                            {collapsed ? <Icons.ChevronRight/> : <Icons.ChevronLeft/>}
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [darkMode, setDarkMode] = useState(false);
+            const [activeTab, setActiveTab] = useState('descargas');
+            const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+            const [user, setUser] = useState({ name: 'Usuario', lastname: '', email: 'usuario@agdp.com', phone: '' });
+            const [isProfileOpen, setProfileOpen] = useState(false);
+
+            useEffect(() => { document.body.className = darkMode ? 'dark-mode' : ''; }, [darkMode]);
+
+            return (
+                <div className="app-container">
+                    <Header 
+                        darkMode={darkMode} 
+                        toggleDarkMode={() => setDarkMode(!darkMode)} 
+                        toggleSidebar={() => setSidebarCollapsed(false)} 
+                        user={user}
+                        onEditProfile={() => setProfileOpen(true)}
+                    />
+                    <div className="main-layout">
+                        <Sidebar 
+                            activeTab={activeTab} 
+                            setActiveTab={setActiveTab} 
+                            collapsed={sidebarCollapsed}
+                            toggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+                        />
+                        <main style={{flex:1, overflow:'hidden', display:'flex', flexDirection:'column'}}>
+                            {activeTab === 'descargas' ? <DashboardContent /> : (
+                                <div style={{padding:'2rem', textAlign:'center', color:'var(--text-light)'}}>Sección {activeTab}</div>
+                            )}
+                        </main>
+                    </div>
+                    
+                    <ProfileModal 
+                        isOpen={isProfileOpen} 
+                        onClose={() => setProfileOpen(false)} 
+                        user={user} 
+                        onSave={(data) => { setUser(data); setProfileOpen(false); }} 
+                    />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
