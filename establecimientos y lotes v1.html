@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo Establecimientos y Lotes</title>
+    
+    <!-- LIBRERÍAS (React + Estilos) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- ESTILOS BASE --- */
+        :root {
+            --primary: #204B42; 
+            --primary-hover: #163630;
+            --bg-body: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-light: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); padding: 2rem; }
+
+        /* UTILIDADES */
+        .btn { padding: 0 1rem; height: 38px; border-radius: 6px; border: 1px solid transparent; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 500; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-outline { border-color: var(--border); background: transparent; color: var(--text-main); }
+        .btn-outline:hover { background-color: var(--bg-body); border-color: var(--text-light); }
+        .btn-icon { background: transparent; border: none; color: var(--text-light); cursor: pointer; padding: 4px; border-radius: 4px; display: flex; }
+        .btn-icon:hover { background: var(--bg-body); color: var(--primary); }
+        
+        .form-input, .form-select { padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text-main); font-size: 0.85rem; height: 38px; outline: none; width: 100%; }
+        .form-input:focus, .form-select:focus { border-color: var(--primary); }
+
+        /* PANEL Y TABLA */
+        .filters-panel { background: var(--surface); padding: 1.25rem; border-radius: 8px 8px 0 0; border: 1px solid var(--border); border-bottom: none; display: flex; flex-direction: column; gap: 1.25rem; }
+        .filters-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+        .section-title { font-size: 1.1rem; font-weight: 600; color: var(--primary); }
+
+        .table-wrapper { background: var(--surface); border: 1px solid var(--border); border-radius: 0 0 8px 8px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.85rem; }
+        .data-table th { background: #f1f5f9; padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: var(--text-light); border-bottom: 1px solid var(--border); }
+        .data-table td { padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-main); vertical-align: middle; }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table tr:hover td { background-color: #f8fafc; }
+        
+        .user-type-badge { background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; color: var(--text-light); font-weight: 500; }
+        .text-center { text-align: center; }
+        .ha-badge { font-size: 0.75rem; color: var(--text-light); background: #f1f5f9; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 4px; }
+
+        /* TOGGLE SWITCH */
+        .toggle-switch { position: relative; width: 36px; height: 20px; display: inline-block; vertical-align: middle; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(16px); }
+
+        /* TOOLTIP CUSTOM */
+        .tooltip-container { position: relative; display: inline-flex; align-items: center; margin-left: 6px; cursor: help; }
+        .tooltip-text { 
+            visibility: hidden; width: 220px; background-color: #334155; color: #fff; text-align: center; 
+            border-radius: 6px; padding: 8px; position: absolute; z-index: 100; bottom: 125%; 
+            left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 0.75rem; font-weight: 400;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); pointer-events: none; line-height: 1.4;
+        }
+        .tooltip-text::after {
+            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px;
+            border-width: 5px; border-style: solid; border-color: #334155 transparent transparent transparent;
+        }
+        .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(2px); }
+        .modal-card { background: var(--surface); width: 100%; max-width: 500px; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); animation: scaleUp 0.2s forwards; }
+        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-header { padding: 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 1.1rem; }
+        .form-grid { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .form-label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); }
+        .modal-footer { padding: 1.25rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.75rem; background: var(--bg-body); border-radius: 0 0 12px 12px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Iconos simplificados
+        const IconWrapper = ({ children, size=20, ...props }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>
+        );
+        const Icons = {
+            Plus: (p) => <IconWrapper {...p}><path d="M5 12h14"/><path d="M12 5v14"/></IconWrapper>,
+            Edit2: (p) => <IconWrapper {...p}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></IconWrapper>,
+            Trash2: (p) => <IconWrapper {...p}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconWrapper>,
+            ChevronRight: (p) => <IconWrapper {...p}><path d="m9 18 6-6-6-6"/></IconWrapper>,
+            ChevronDown: (p) => <IconWrapper {...p}><path d="m6 9 6 6 6-6"/></IconWrapper>,
+            X: (p) => <IconWrapper {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconWrapper>,
+            Info: (p) => <IconWrapper {...p}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></IconWrapper>,
+            Layout: (p) => <IconWrapper {...p}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="21" y2="9"/></IconWrapper>
+        };
+
+        const EstablishmentConfig = () => {
+            const [filterProducer, setFilterProducer] = useState('');
+            const [filterEst, setFilterEst] = useState('');
+            
+            // Estado para edición en línea (Inline Editing)
+            const [editingCell, setEditingCell] = useState({ id: null, value: '' });
+
+            // Datos Iniciales con Hectáreas
+            const [data, setData] = useState([
+                {
+                    id: 1,
+                    code: 'EST001-AR',
+                    name: 'La Estancia',
+                    owner: 'Propietario Prueba',
+                    country: 'Argentina',
+                    province: 'Córdoba',
+                    city: 'Río Cuarto',
+                    sendToTablet: true,
+                    expanded: true,
+                    lots: [
+                        { id: 101, code: 'L001-N', name: 'Lote Norte', hectares: 150, sendToTablet: true },
+                        { id: 102, code: 'L002-S', name: 'Lote Sur', hectares: 85.5, sendToTablet: false }
+                    ]
+                },
+                {
+                    id: 2,
+                    code: 'EST002-BA',
+                    name: 'El Trébol',
+                    owner: 'Juan Pérez',
+                    country: 'Argentina',
+                    province: 'Buenos Aires',
+                    city: 'Tandil',
+                    sendToTablet: false,
+                    expanded: false,
+                    lots: [
+                        { id: 201, code: 'L003-A', name: 'Lote Ruta', hectares: 200, sendToTablet: true }
+                    ]
+                }
+            ]);
+
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [modalMode, setModalMode] = useState('EST'); 
+            const [currentItem, setCurrentItem] = useState(null);
+            const [parentId, setParentId] = useState(null); 
+
+            // Funciones para Edición en Línea
+            const startEditing = (lot) => {
+                setEditingCell({ id: lot.id, value: lot.hectares });
+            };
+
+            const saveEditing = (estId, lotId) => {
+                const newValue = parseFloat(editingCell.value);
+                // Si es inválido, mantenemos el valor anterior o ponemos 0
+                const finalValue = isNaN(newValue) ? 0 : newValue;
+
+                setData(prev => prev.map(est => {
+                    if (est.id !== estId) return est;
+                    return {
+                        ...est,
+                        lots: est.lots.map(l => l.id === lotId ? { ...l, hectares: finalValue } : l)
+                    };
+                }));
+                setEditingCell({ id: null, value: '' });
+            };
+
+            const handleKeyDown = (e, estId, lotId) => {
+                if (e.key === 'Enter') saveEditing(estId, lotId);
+                if (e.key === 'Escape') setEditingCell({ id: null, value: '' });
+            };
+
+            const locationData = {
+                'Argentina': {
+                    'Córdoba': ['Córdoba Capital', 'Río Cuarto', 'Villa Carlos Paz'],
+                    'Buenos Aires': ['La Plata', 'Tandil', 'Bahía Blanca']
+                }
+            };
+
+            const toggleExpand = (id) => {
+                setData(prev => prev.map(item => item.id === id ? {...item, expanded: !item.expanded} : item));
+            };
+
+            const toggleTablet = (estId, lotId = null) => {
+                setData(prev => prev.map(est => {
+                    if (est.id !== estId) return est;
+                    if (lotId === null) {
+                        return { ...est, sendToTablet: !est.sendToTablet };
+                    } else {
+                        return {
+                            ...est,
+                            lots: est.lots.map(l => l.id === lotId ? {...l, sendToTablet: !l.sendToTablet} : l)
+                        };
+                    }
+                }));
+            };
+
+            const handleDelete = (estId, lotId = null) => {
+                if (!confirm("¿Seguro que desea eliminar este registro?")) return;
+                if (lotId === null) {
+                    setData(prev => prev.filter(p => p.id !== estId));
+                } else {
+                    setData(prev => prev.map(est => {
+                        if (est.id !== estId) return est;
+                        return { ...est, lots: est.lots.filter(l => l.id !== lotId) };
+                    }));
+                }
+            };
+
+            const openModal = (mode, item = null, parent = null) => {
+                setModalMode(mode);
+                setParentId(parent);
+                if (item) {
+                    setCurrentItem({...item});
+                } else {
+                    if (mode === 'EST') {
+                        setCurrentItem({ code: '', name: '', owner: 'Propietario Prueba', country: 'Argentina', province: '', city: '', sendToTablet: true });
+                    } else {
+                        // Inicializar hectáreas en 0 o vacío
+                        setCurrentItem({ code: '', name: '', hectares: '', sendToTablet: true });
+                    }
+                }
+                setIsModalOpen(true);
+            };
+
+            const handleSave = () => {
+                if (!currentItem.code || !currentItem.name) return alert("Código y Nombre requeridos");
+                if (currentItem.code.length > 12) return alert("Código máx 12 caracteres");
+                if (currentItem.name.length > 25) return alert("Nombre máx 25 caracteres");
+
+                if (modalMode === 'EST') {
+                    if (currentItem.id) {
+                        setData(prev => prev.map(est => est.id === currentItem.id ? { ...est, ...currentItem } : est));
+                    } else {
+                        const newEst = { ...currentItem, id: Date.now(), lots: [], expanded: true };
+                        setData(prev => [...prev, newEst]);
+                    }
+                } else {
+                    // Validar Hectáreas en Lote
+                    const lotData = { ...currentItem, hectares: parseFloat(currentItem.hectares) || 0 };
+                    
+                    if (currentItem.id) {
+                        setData(prev => prev.map(est => {
+                            if (est.id !== parentId) return est;
+                            return { ...est, lots: est.lots.map(l => l.id === currentItem.id ? { ...l, ...lotData } : l) };
+                        }));
+                    } else {
+                        setData(prev => prev.map(est => {
+                            if (est.id !== parentId) return est;
+                            return { ...est, lots: [...est.lots, { ...lotData, id: Date.now() }] };
+                        }));
+                    }
+                }
+                setIsModalOpen(false);
+            };
+
+            const filteredData = data.filter(item => {
+                const matchProd = filterProducer ? item.owner.toLowerCase().includes(filterProducer.toLowerCase()) : true;
+                const matchEst = filterEst ? item.name.toLowerCase().includes(filterEst.toLowerCase()) : true;
+                return matchProd && matchEst;
+            });
+
+            const TooltipInfo = () => (
+                <div className="tooltip-container">
+                    <Icons.Info size={14} color="var(--info)" />
+                    <span className="tooltip-text">
+                        Si está activo, este campo aparecerá disponible para elegir en la tablet. Si está desactivado, no se podrá elegir.
+                    </span>
+                </div>
+            );
+
+            return (
+                <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+                    
+                    {/* FILTROS */}
+                    <div className="filters-panel">
+                        <h2 className="section-title">Establecimientos y Lotes</h2>
+                        <div className="filters-row">
+                            <input 
+                                placeholder="Filtrar por Productor/Dueño..." 
+                                className="form-input" 
+                                style={{flex:1, minWidth:'200px'}}
+                                value={filterProducer}
+                                onChange={e => setFilterProducer(e.target.value)}
+                            />
+                            <input 
+                                placeholder="Filtrar por Establecimiento..." 
+                                className="form-input" 
+                                style={{flex:1, minWidth:'200px'}}
+                                value={filterEst}
+                                onChange={e => setFilterEst(e.target.value)}
+                            />
+                            <div style={{flex:'0 0 auto'}}>
+                                <button className="btn btn-primary" onClick={() => openModal('EST')}>
+                                    <Icons.Plus size={18}/> Nuevo Establecimiento
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* TABLA */}
+                    <div className="table-wrapper">
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th style={{width:40}}></th>
+                                    <th>Código</th>
+                                    <th>Nombre</th>
+                                    <th>Ubicación / Hectáreas</th>
+                                    <th>Propietario</th>
+                                    <th className="text-center">
+                                        <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:4}}>
+                                            Tablet <TooltipInfo />
+                                        </div>
+                                    </th>
+                                    <th className="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredData.map(est => (
+                                    <React.Fragment key={est.id}>
+                                        {/* ESTABLECIMIENTO */}
+                                        <tr style={{background: '#fff'}}>
+                                            <td className="text-center" style={{cursor:'pointer'}} onClick={() => toggleExpand(est.id)}>
+                                                {est.expanded ? <Icons.ChevronDown size={18} color="var(--primary)"/> : <Icons.ChevronRight size={18} color="var(--text-light)"/>}
+                                            </td>
+                                            <td style={{fontWeight:600}}>{est.code}</td>
+                                            <td style={{fontWeight:600, color:'var(--primary)'}}>{est.name}</td>
+                                            <td style={{fontSize:'0.8rem', color:'var(--text-light)'}}>
+                                                {est.city}, {est.province}
+                                            </td>
+                                            <td><span className="user-type-badge">{est.owner}</span></td>
+                                            <td className="text-center">
+                                                <div className="tooltip-container" style={{margin:0}}>
+                                                    <label className="toggle-switch">
+                                                        <input type="checkbox" checked={est.sendToTablet} onChange={() => toggleTablet(est.id)} />
+                                                        <span className="slider"></span>
+                                                    </label>
+                                                    <span className="tooltip-text">
+                                                        {est.sendToTablet ? "Activo: Disponible en Tablet" : "Inactivo: No visible en Tablet"}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="text-center">
+                                                <div style={{display:'flex', justifyContent:'center', gap:4}}>
+                                                    <button className="btn-icon" title="Agregar Lote" onClick={() => openModal('LOT', null, est.id)}><Icons.Plus size={16} color="var(--primary)"/></button>
+                                                    <button className="btn-icon" title="Editar" onClick={() => openModal('EST', est)}><Icons.Edit2 size={16}/></button>
+                                                    <button className="btn-icon" title="Eliminar" onClick={() => handleDelete(est.id)}><Icons.Trash2 size={16} color="var(--danger)"/></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        
+                                        {/* LOTES */}
+                                        {est.expanded && (
+                                            <>
+                                                {est.lots.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan="7" style={{padding:'1rem', textAlign:'center', fontStyle:'italic', color:'var(--text-light)', background:'#f8fafc', borderBottom:'1px dashed var(--border)'}}>
+                                                            No hay lotes cargados para {est.name}.
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                                {est.lots.map(lot => (
+                                                    <tr key={lot.id} style={{background: '#f8fafc'}}>
+                                                        <td style={{borderRight:'3px solid var(--primary)'}}></td>
+                                                        <td style={{paddingLeft:'1.5rem', fontSize:'0.85rem', color:'var(--text-light)', fontFamily:'monospace'}}>└ {lot.code}</td>
+                                                        <td style={{fontSize:'0.85rem', fontWeight:500}}>{lot.name}</td>
+                                                        
+                                                        {/* CELDA EDITABLE DE HECTÁREAS */}
+                                                        <td 
+                                                            style={{verticalAlign:'middle', cursor: 'text'}}
+                                                            onClick={() => startEditing(lot)}
+                                                            title="Click para editar hectáreas"
+                                                        >
+                                                            {editingCell.id === lot.id ? (
+                                                                <input 
+                                                                    type="number"
+                                                                    autoFocus
+                                                                    step="0.01"
+                                                                    className="form-input"
+                                                                    style={{height: '28px', width: '100px', padding: '0 0.5rem', fontSize:'0.85rem'}}
+                                                                    value={editingCell.value}
+                                                                    onChange={(e) => setEditingCell({ ...editingCell, value: e.target.value })}
+                                                                    onBlur={() => saveEditing(est.id, lot.id)}
+                                                                    onKeyDown={(e) => handleKeyDown(e, est.id, lot.id)}
+                                                                    onClick={(e) => e.stopPropagation()} 
+                                                                />
+                                                            ) : (
+                                                                lot.hectares > 0 ? (
+                                                                    <span className="ha-badge" style={{cursor:'pointer', transition:'background 0.2s'}}>
+                                                                        <Icons.Layout size={12}/> {lot.hectares} ha <Icons.Edit2 size={10} style={{opacity:0.5, marginLeft:4}}/>
+                                                                    </span>
+                                                                ) : (
+                                                                    <span style={{fontSize:'0.75rem', color:'#94a3b8', borderBottom:'1px dashed #cbd5e1', cursor:'pointer'}}>
+                                                                        + Agregar Ha
+                                                                    </span>
+                                                                )
+                                                            )}
+                                                        </td>
+
+                                                        <td></td>
+                                                        <td className="text-center">
+                                                            <div className="tooltip-container" style={{margin:0}}>
+                                                                <label className="toggle-switch" style={{transform:'scale(0.85)'}}>
+                                                                    <input type="checkbox" checked={lot.sendToTablet} onChange={() => toggleTablet(est.id, lot.id)} />
+                                                                    <span className="slider"></span>
+                                                                </label>
+                                                                <span className="tooltip-text">
+                                                                    {lot.sendToTablet ? "Lote visible en Tablet" : "Lote oculto en Tablet"}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="text-center">
+                                                            <div style={{display:'flex', justifyContent:'center', gap:4}}>
+                                                                <button className="btn-icon" onClick={() => openModal('LOT', lot, est.id)}><Icons.Edit2 size={14}/></button>
+                                                                <button className="btn-icon" onClick={() => handleDelete(est.id, lot.id)}><Icons.Trash2 size={14} color="var(--danger)"/></button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                <tr style={{height:10}}></tr> 
+                                            </>
+                                        )}
+                                    </React.Fragment>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* MODAL */}
+                    {isModalOpen && (
+                        <div className="modal-overlay">
+                            <div className="modal-card">
+                                <div className="modal-header">
+                                    <h3>{currentItem.id ? 'Editar' : 'Nuevo'} {modalMode === 'EST' ? 'Establecimiento' : 'Lote'}</h3>
+                                    <button className="btn-icon" onClick={() => setIsModalOpen(false)}><Icons.X size={20}/></button>
+                                </div>
+                                <div className="form-grid">
+                                    <div className="form-group">
+                                        <label className="form-label">Código (Único, máx 12)</label>
+                                        <input 
+                                            maxLength={12}
+                                            className="form-input" 
+                                            value={currentItem.code} 
+                                            onChange={e => setCurrentItem({...currentItem, code: e.target.value.toUpperCase()})}
+                                            placeholder="Ej: EST-001"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Nombre (Máx 25)</label>
+                                        <input 
+                                            maxLength={25}
+                                            className="form-input" 
+                                            value={currentItem.name} 
+                                            onChange={e => setCurrentItem({...currentItem, name: e.target.value})}
+                                            placeholder="Nombre descriptivo"
+                                        />
+                                    </div>
+
+                                    {modalMode === 'EST' ? (
+                                        <>
+                                            <div className="form-group">
+                                                <label className="form-label">Propietario</label>
+                                                <select 
+                                                    className="form-select" 
+                                                    value={currentItem.owner} 
+                                                    onChange={e => setCurrentItem({...currentItem, owner: e.target.value})}
+                                                >
+                                                    <option value="Propietario Prueba">Propietario Prueba</option>
+                                                    <option value="Juan Pérez">Juan Pérez</option>
+                                                    <option value="Agrícola S.A.">Agrícola S.A.</option>
+                                                </select>
+                                            </div>
+                                            <div style={{display:'flex', gap:'1rem'}}>
+                                                <div className="form-group" style={{flex:1}}>
+                                                    <label className="form-label">País</label>
+                                                    <select className="form-select" value={currentItem.country} disabled><option>Argentina</option></select>
+                                                </div>
+                                                <div className="form-group" style={{flex:1}}>
+                                                    <label className="form-label">Provincia</label>
+                                                    <select 
+                                                        className="form-select" 
+                                                        value={currentItem.province} 
+                                                        onChange={e => setCurrentItem({...currentItem, province: e.target.value, city: ''})}
+                                                    >
+                                                        <option value="">Seleccionar...</option>
+                                                        {Object.keys(locationData['Argentina']).map(p => <option key={p} value={p}>{p}</option>)}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className="form-group">
+                                                <label className="form-label">Ciudad</label>
+                                                <select 
+                                                    className="form-select" 
+                                                    value={currentItem.city} 
+                                                    onChange={e => setCurrentItem({...currentItem, city: e.target.value})}
+                                                    disabled={!currentItem.province}
+                                                >
+                                                    <option value="">Seleccionar...</option>
+                                                    {currentItem.province && locationData['Argentina'][currentItem.province].map(c => (
+                                                        <option key={c} value={c}>{c}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        /* CAMPO EXCLUSIVO PARA LOTE: HECTAREAS */
+                                        <div className="form-group">
+                                            <label className="form-label">Hectáreas</label>
+                                            <div style={{position:'relative'}}>
+                                                <input 
+                                                    type="number"
+                                                    step="0.01"
+                                                    className="form-input" 
+                                                    style={{paddingLeft: '32px'}}
+                                                    value={currentItem.hectares} 
+                                                    onChange={e => setCurrentItem({...currentItem, hectares: e.target.value})}
+                                                    placeholder="0.00"
+                                                />
+                                                <div style={{position:'absolute', left:10, top:10, color:'var(--text-light)'}}>
+                                                    <Icons.Layout size={16}/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="form-group" style={{marginTop:'1rem', background:'#f1f5f9', padding:'1rem', borderRadius:'6px'}}>
+                                        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                                            <label style={{fontSize:'0.9rem', fontWeight:600}}>Disponible en Tablet</label>
+                                            <label className="toggle-switch">
+                                                <input type="checkbox" checked={currentItem.sendToTablet} onChange={e => setCurrentItem({...currentItem, sendToTablet: e.target.checked})} />
+                                                <span className="slider"></span>
+                                            </label>
+                                        </div>
+                                        <p style={{fontSize:'0.75rem', color:'var(--text-light)', marginTop:'0.5rem'}}>
+                                            Activa esta opción para que este {modalMode === 'EST' ? 'establecimiento' : 'lote'} aparezca disponible para elegir en la aplicación móvil.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="modal-footer">
+                                    <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Cancelar</button>
+                                    <button className="btn btn-primary" onClick={handleSave}>Guardar</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<EstablishmentConfig />);
+    </script>
+</body>
+</html>
