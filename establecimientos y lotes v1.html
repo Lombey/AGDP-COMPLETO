@@ -89,6 +89,9 @@
         .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
         .form-label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); }
         .modal-footer { padding: 1.25rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.75rem; background: var(--bg-body); border-radius: 0 0 12px 12px; }
+
+        /* ANIMACION FADE IN SIMPLE */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -119,7 +122,7 @@
             // Estado para edición en línea (Inline Editing)
             const [editingCell, setEditingCell] = useState({ id: null, value: '' });
 
-            // Datos Iniciales con Hectáreas
+            // Datos Iniciales con Hectáreas y Convenio
             const [data, setData] = useState([
                 {
                     id: 1,
@@ -129,6 +132,7 @@
                     country: 'Argentina',
                     province: 'Córdoba',
                     city: 'Río Cuarto',
+                    agreement: 'CONV-2023-A', // Ejemplo de convenio cargado
                     sendToTablet: true,
                     expanded: true,
                     lots: [
@@ -144,6 +148,7 @@
                     country: 'Argentina',
                     province: 'Buenos Aires',
                     city: 'Tandil',
+                    agreement: '', // Sin convenio
                     sendToTablet: false,
                     expanded: false,
                     lots: [
@@ -155,7 +160,9 @@
             const [isModalOpen, setIsModalOpen] = useState(false);
             const [modalMode, setModalMode] = useState('EST'); 
             const [currentItem, setCurrentItem] = useState(null);
-            const [parentId, setParentId] = useState(null); 
+            const [parentId, setParentId] = useState(null);
+            // Estado para mostrar opciones avanzadas
+            const [showAdvanced, setShowAdvanced] = useState(false);
 
             // Funciones para Edición en Línea
             const startEditing = (lot) => {
@@ -164,7 +171,6 @@
 
             const saveEditing = (estId, lotId) => {
                 const newValue = parseFloat(editingCell.value);
-                // Si es inválido, mantenemos el valor anterior o ponemos 0
                 const finalValue = isNaN(newValue) ? 0 : newValue;
 
                 setData(prev => prev.map(est => {
@@ -222,15 +228,23 @@
             const openModal = (mode, item = null, parent = null) => {
                 setModalMode(mode);
                 setParentId(parent);
+                
                 if (item) {
                     setCurrentItem({...item});
+                    // Si ya tiene convenio cargado, mostramos opciones avanzadas automáticamente
+                    if (mode === 'EST' && item.agreement) {
+                        setShowAdvanced(true);
+                    } else {
+                        setShowAdvanced(false);
+                    }
                 } else {
                     if (mode === 'EST') {
-                        setCurrentItem({ code: '', name: '', owner: 'Propietario Prueba', country: 'Argentina', province: '', city: '', sendToTablet: true });
+                        // Inicialización con convenio vacío
+                        setCurrentItem({ code: '', name: '', owner: 'Propietario Prueba', country: 'Argentina', province: '', city: '', agreement: '', sendToTablet: true });
                     } else {
-                        // Inicializar hectáreas en 0 o vacío
                         setCurrentItem({ code: '', name: '', hectares: '', sendToTablet: true });
                     }
+                    setShowAdvanced(false);
                 }
                 setIsModalOpen(true);
             };
@@ -248,7 +262,6 @@
                         setData(prev => [...prev, newEst]);
                     }
                 } else {
-                    // Validar Hectáreas en Lote
                     const lotData = { ...currentItem, hectares: parseFloat(currentItem.hectares) || 0 };
                     
                     if (currentItem.id) {
@@ -336,7 +349,11 @@
                                             <td className="text-center" style={{cursor:'pointer'}} onClick={() => toggleExpand(est.id)}>
                                                 {est.expanded ? <Icons.ChevronDown size={18} color="var(--primary)"/> : <Icons.ChevronRight size={18} color="var(--text-light)"/>}
                                             </td>
-                                            <td style={{fontWeight:600}}>{est.code}</td>
+                                            <td style={{fontWeight:600}}>
+                                                {est.code}
+                                                {/* Indicador sutil de que tiene convenio */}
+                                                {est.agreement && <span title={`Convenio: ${est.agreement}`} style={{display:'inline-block', width:6, height:6, background:'var(--info)', borderRadius:'50%', marginLeft:6, verticalAlign:'top'}}></span>}
+                                            </td>
                                             <td style={{fontWeight:600, color:'var(--primary)'}}>{est.name}</td>
                                             <td style={{fontSize:'0.8rem', color:'var(--text-light)'}}>
                                                 {est.city}, {est.province}
@@ -378,7 +395,6 @@
                                                         <td style={{paddingLeft:'1.5rem', fontSize:'0.85rem', color:'var(--text-light)', fontFamily:'monospace'}}>└ {lot.code}</td>
                                                         <td style={{fontSize:'0.85rem', fontWeight:500}}>{lot.name}</td>
                                                         
-                                                        {/* CELDA EDITABLE DE HECTÁREAS */}
                                                         <td 
                                                             style={{verticalAlign:'middle', cursor: 'text'}}
                                                             onClick={() => startEditing(lot)}
@@ -514,6 +530,32 @@
                                                     ))}
                                                 </select>
                                             </div>
+
+                                            {/* SECCIÓN OPCIONES AVANZADAS */}
+                                            <div style={{marginTop: '0.5rem', borderTop:'1px dashed var(--border)', paddingTop:'0.5rem'}}>
+                                                <button 
+                                                    onClick={() => setShowAdvanced(!showAdvanced)}
+                                                    style={{background:'none', border:'none', color:'var(--primary)', fontSize:'0.8rem', cursor:'pointer', display:'flex', alignItems:'center', gap:'0.25rem', padding:0, fontWeight:500}}
+                                                >
+                                                    {showAdvanced ? <Icons.ChevronDown size={16}/> : <Icons.ChevronRight size={16}/>}
+                                                    Opciones Avanzadas
+                                                </button>
+                                            </div>
+
+                                            {showAdvanced && (
+                                                <div className="form-group" style={{marginTop:'0.5rem', animation: 'fadeIn 0.2s'}}>
+                                                    <label className="form-label">Convenio (Opcional)</label>
+                                                    <input 
+                                                        className="form-input" 
+                                                        value={currentItem.agreement || ''} 
+                                                        onChange={e => setCurrentItem({...currentItem, agreement: e.target.value})}
+                                                        placeholder="Código o nombre de convenio"
+                                                    />
+                                                    <small style={{fontSize:'0.7rem', color:'var(--text-light)'}}>
+                                                        Uso exclusivo para clientes con convenio especial de acopio.
+                                                    </small>
+                                                </div>
+                                            )}
                                         </>
                                     ) : (
                                         /* CAMPO EXCLUSIVO PARA LOTE: HECTAREAS */
