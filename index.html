@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AGDP Dashboard | Clean</title>
+    <title>AGDP Dashboard | React</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
@@ -21,6 +20,10 @@
             --border: #e2e8f0;
             --text-main: #0f172a;
             --text-light: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6; 
             --header-height: 64px;
             --sidebar-width: 240px;
         }
@@ -28,9 +31,9 @@
         body.dark-mode {
             --primary: #2d6a5e;
             --bg-body: #0f172a;       
-            --surface: #1e293b;        
+            --surface: #1e293b;       
             --border: #334155;        
-            --text-main: #f1f5f9;      
+            --text-main: #f1f5f9;     
             --text-light: #94a3b8;    
         }
 
@@ -42,28 +45,68 @@
         .brand { display: flex; align-items: center; gap: 1rem; }
         .brand h1 { font-size: 1.1rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
         .logo-box { width:32px; height:32px; background:white; color:#204B42; font-weight:bold; display:flex; align-items:center; justify-content:center; border-radius:4px; font-size: 0.8rem; }
+        .version-badge { font-size: 0.7rem; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-weight: 400; opacity: 0.9; }
         
         .header-actions { display: flex; gap: 0.8rem; align-items: center; }
-        .nav-icon-btn { background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background 0.2s; }
+        .user-type-badge { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem; }
+        .nav-icon-btn { background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; transition: background 0.2s; }
         .nav-icon-btn:hover { background: rgba(255,255,255,0.25); }
-        .user-profile { display: flex; align-items: center; gap: 0.5rem; background: white; color: #204B42; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+        .notif-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 1px solid #204B42; }
+        
+        .user-profile { display: flex; align-items: center; gap: 0.5rem; background: white; color: #204B42; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
+        .user-profile:hover { transform: translateY(-1px); }
 
-        /* LAYOUT & SIDEBAR */
+        /* LAYOUT */
         .app-container { display: flex; flex-direction: column; height: 100vh; }
         .main-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
 
-        .sidebar { width: var(--sidebar-width); background-color: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding-top: 1rem; transition: margin-left 0.3s ease; }
+        /* SIDEBAR */
+        .sidebar { width: var(--sidebar-width); background-color: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding-top: 1rem; transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 40; flex-shrink: 0; }
         .sidebar.collapsed { margin-left: calc(var(--sidebar-width) * -1); }
-        .sidebar-item { display: flex; gap: 0.8rem; padding: 0.8rem 1.5rem; color: var(--text-light); cursor: pointer; font-size: 0.9rem; align-items: center; border-left: 3px solid transparent; transition: all 0.2s; font-weight: 500; }
+        .sidebar-item { display: flex; gap: 0.8rem; padding: 0.8rem 1.5rem; color: var(--text-light); cursor: pointer; font-size: 0.9rem; align-items: center; text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s; font-weight: 500; }
         .sidebar-item:hover { background: var(--bg-body); color: var(--primary); }
         .sidebar-item.active { color: var(--primary); background: rgba(32, 75, 66, 0.08); border-left-color: var(--primary); }
+        .sidebar-footer { margin-top: auto; padding: 1rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+
+        /* CONTENIDO MODULO */
+        .module-content { flex: 1; padding: 2rem; overflow-y: auto; background-color: var(--bg-body); display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-light); text-align: center; }
+        .empty-state-icon { margin-bottom: 1rem; opacity: 0.2; }
+
+        /* NOTIFICATIONS & DROPDOWN */
+        .dropdown { position: absolute; top: 50px; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; width: 320px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); color: var(--text-main); z-index: 100; overflow: hidden; animation: slideDown 0.2s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .dd-header { padding: 0.8rem 1rem; border-bottom: 1px solid var(--border); font-weight: 600; background: var(--bg-body); font-size: 0.85rem; color: var(--text-light); }
+        .dd-item { padding: 0.8rem 1rem; border-bottom: 1px solid var(--border); display: flex; gap: 0.8rem; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; }
+        .dd-item:hover { background: var(--bg-body); }
+        .dd-item:last-child { border-bottom: none; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); opacity: 0; animation: fadeIn 0.2s forwards; }
+        @keyframes fadeIn { to { opacity: 1; } }
+        .modal-card { background: var(--surface); width: 100%; max-width: 500px; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); transform: scale(0.95); animation: scaleUp 0.2s forwards; }
+        @keyframes scaleUp { to { transform: scale(1); } }
+        .modal-header { padding: 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 1.1rem; }
+        .form-grid { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .form-label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); }
+        .section-title { font-size: 0.9rem; font-weight: 600; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-top: 1rem; }
+        .password-wrapper { position: relative; }
+        .toggle-pass-btn { position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-light); }
+        .modal-footer { padding: 1.25rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.75rem; background: var(--bg-body); border-radius: 0 0 12px 12px; }
         
-        /* CONTENIDO PRINCIPAL */
-        .module-container { flex: 1; padding: 2rem; overflow-y: auto; background-color: var(--bg-body); display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--text-light); }
-        .empty-state-box { border: 2px dashed var(--border); padding: 3rem; border-radius: 12px; text-align: center; }
-        
-        /* UTILS */
-        .btn-icon { background: transparent; border: none; cursor: pointer; color: inherit; display: flex; }
+        /* UTILIDADES FORM */
+        .form-input { padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-body); color: var(--text-main); font-size: 0.85rem; height: 38px; outline: none; width: 100%; }
+        .form-input:focus { border-color: var(--primary); }
+        .btn { padding: 0 1rem; height: 38px; border-radius: 6px; border: 1px solid transparent; font-size: 0.85rem; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-outline { border-color: var(--border); background: transparent; color: var(--text-main); }
+        .btn-icon { background: transparent; border: none; color: var(--text-light); cursor: pointer; padding: 4px; display: flex; }
+
+        @media (max-width: 768px) { 
+            .sidebar { position: fixed; height: 100%; left: -100%; box-shadow: 5px 0 15px rgba(0,0,0,0.1); } 
+            .sidebar.mobile-open { left: 0; } 
+            .user-type-badge, .brand span { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -72,58 +115,157 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
         
-        // --- ICONOS ---
+        // --- CONFIGURACIÓN DE ICONOS ---
         const IconWrapper = ({ children, size=24, color="currentColor", ...props }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>
         );
 
+        // Iconos estrictamente necesarios para el layout pedido
         const Icons = {
             Moon: (p) => <IconWrapper {...p}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></IconWrapper>,
             Sun: (p) => <IconWrapper {...p}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></IconWrapper>,
+            Bell: (p) => <IconWrapper {...p}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></IconWrapper>,
+            CloudDownload: (p) => <IconWrapper {...p}><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/></IconWrapper>,
+            User: (p) => <IconWrapper {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></IconWrapper>,
             Menu: (p) => <IconWrapper {...p}><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></IconWrapper>,
             Download: (p) => <IconWrapper {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></IconWrapper>,
-            User: (p) => <IconWrapper {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></IconWrapper>,
-            MapPin: (p) => <IconWrapper {...p}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></IconWrapper>,
-            Box: (p) => <IconWrapper {...p}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" x2="12" y1="22.08" y2="12"/></IconWrapper>
+            ChevronLeft: (p) => <IconWrapper {...p}><path d="m15 18-6-6 6-6"/></IconWrapper>,
+            ChevronRight: (p) => <IconWrapper {...p}><path d="m9 18 6-6-6-6"/></IconWrapper>,
+            X: (p) => <IconWrapper {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconWrapper>,
+            Eye: (p) => <IconWrapper {...p}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></IconWrapper>,
+            EyeOff: (p) => <IconWrapper {...p}><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></IconWrapper>,
+            AlertOctagon: (p) => <IconWrapper {...p}><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></IconWrapper>,
+            MapPin: (p) => <IconWrapper {...p}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></IconWrapper>
         };
 
         const IconTolva = ({ size = 24, color = "currentColor" }) => (
             <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="7.5" cy="17.5" r="2.5" /><circle cx="15.5" cy="17.5" r="2.5" /><circle cx="20.5" cy="18.5" r="1.5" />
-                <path d="M3 10L5 17H10L12 10H3Z" /><path d="M3 10L2 8H13L12 10" /><path d="M8 10L8 5L2 5" />
-                <path d="M13 17H18V12H13" /><path d="M13 12L14 9H17L18 12" /><path d="M18 14H22L23 18" /><path d="M10 16H13" />
+                <circle cx="7.5" cy="17.5" r="2.5" />
+                <circle cx="15.5" cy="17.5" r="2.5" />
+                <circle cx="20.5" cy="18.5" r="1.5" />
+                <path d="M3 10L5 17H10L12 10H3Z" />
+                <path d="M3 10L2 8H13L12 10" />
+                <path d="M8 10L8 5L2 5" />
+                <path d="M13 17H18V12H13" />
+                <path d="M13 12L14 9H17L18 12" />
+                <path d="M18 14H22L23 18" />
+                <path d="M10 16H13" />
             </svg>
         );
 
-        // --- COMPONENTES ---
+        // --- COMPONENTE MODAL DE PERFIL (Mantenido) ---
+        const ProfileModal = ({ isOpen, onClose, user, onSave }) => {
+            if (!isOpen) return null;
+            const [formData, setFormData] = useState({ ...user });
+            const [showPass, setShowPass] = useState({ old: false, new: false, confirm: false });
 
-        const EmptyModule = ({ title }) => (
-            <div className="module-container">
-                <div className="empty-state-box">
-                    <Icons.Box size={48} style={{ opacity: 0.3, marginBottom: '1rem' }} />
-                    <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--primary)' }}>{title}</h2>
-                    <p>Módulo vacío. Listo para desarrollo.</p>
-                </div>
-            </div>
-        );
-
-        const Header = ({ darkMode, toggleDarkMode, toggleSidebar, user }) => (
-            <header>
-                <div className="brand">
-                    <button className="nav-icon-btn" onClick={toggleSidebar} style={{marginRight:'1rem'}}><Icons.Menu size={24}/></button>
-                    <div className="logo-box">AG</div>
-                    <h1>AGDP <span>System</span></h1>
-                </div>
-                <div className="header-actions">
-                    <button className="nav-icon-btn" onClick={toggleDarkMode}>{darkMode ? <Icons.Sun size={20}/> : <Icons.Moon size={20}/>}</button>
-                    <div className="user-profile">
-                        <Icons.User size={20}/> <span>{user}</span>
+            return (
+                <div className="modal-overlay">
+                    <div className="modal-card">
+                        <div className="modal-header">
+                            <h3>Mi Perfil</h3>
+                            <button className="btn-icon" onClick={onClose}><Icons.X size={20}/></button>
+                        </div>
+                        <div className="form-grid">
+                            <div className="form-group">
+                                <label className="form-label">Nombre</label>
+                                <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="form-input" />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Apellido</label>
+                                <input value={formData.lastname} onChange={e => setFormData({...formData, lastname: e.target.value})} className="form-input" />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Email</label>
+                                <input value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="form-input" />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Teléfono</label>
+                                <input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="form-input" />
+                            </div>
+                            
+                            <div className="section-title">Cambiar Contraseña</div>
+                            {['old', 'new', 'confirm'].map(field => (
+                                <div className="form-group" key={field}>
+                                    <label className="form-label">{field === 'old' ? 'Clave Anterior' : field === 'new' ? 'Nueva Clave' : 'Confirmar'}</label>
+                                    <div className="password-wrapper">
+                                        <input type={showPass[field] ? "text" : "password"} className="form-input" style={{paddingRight: '2.5rem'}} />
+                                        <button className="toggle-pass-btn" onClick={() => setShowPass({...showPass, [field]: !showPass[field]})}>
+                                            {showPass[field] ? <Icons.EyeOff size={16}/> : <Icons.Eye size={16}/>}
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-outline" onClick={onClose}>Cancelar</button>
+                            <button className="btn btn-primary" onClick={() => onSave(formData)}>Guardar Perfil</button>
+                        </div>
                     </div>
                 </div>
-            </header>
-        );
+            );
+        };
 
-        const Sidebar = ({ activeTab, setActiveTab, collapsed }) => {
+        // --- COMPONENTE DE MODULO VACIO ---
+        const EmptyModule = ({ title }) => {
+            return (
+                <div className="module-content">
+                    <div className="empty-state-icon">
+                        <Icons.Download size={64} />
+                    </div>
+                    <h2 style={{fontWeight: 400, color: 'var(--text-main)'}}>{title}</h2>
+                    <p style={{fontSize: '0.9rem', marginTop: '0.5rem'}}>Módulo vacío</p>
+                </div>
+            );
+        };
+
+        const Header = ({ darkMode, toggleDarkMode, toggleSidebar, user, onEditProfile }) => {
+            const [showNotif, setShowNotif] = useState(false);
+            const alerts = [
+                { type: 'Modificación en Tolva', color: 'var(--info)', msg: 'El tolvero modificó humedad.', time: '14:30' },
+                { type: 'Sobrepeso', color: 'var(--warning)', msg: 'Exceso de peso detectado.', time: '12:15' },
+                { type: 'Descarga Defectuosa', color: 'var(--danger)', msg: 'Falla en sensor.', time: '10:45' }
+            ];
+
+            return (
+                <header>
+                    <div className="brand">
+                        <button className="nav-icon-btn" onClick={toggleSidebar} style={{marginRight:'1rem'}}><Icons.Menu size={24}/></button>
+                        <div className="logo-box">AG</div>
+                        <h1>Descargas <span>| AGDP</span> <span className="version-badge">v4.23</span></h1>
+                    </div>
+                    <div className="header-actions">
+                        <div className="user-type-badge">Productor: <strong>2218PH</strong></div>
+                        <button className="nav-icon-btn" onClick={toggleDarkMode}>{darkMode ? <Icons.Sun size={20}/> : <Icons.Moon size={20}/>}</button>
+                        
+                        <div style={{position:'relative'}}>
+                            <button className="nav-icon-btn" onClick={() => setShowNotif(!showNotif)}>
+                                <Icons.Bell size={20}/> <span className="notif-dot"></span>
+                            </button>
+                            {showNotif && (
+                                <div className="dropdown">
+                                    <div className="dd-header">Alertas Recientes</div>
+                                    {alerts.map((a,i) => (
+                                        <div key={i} className="dd-item">
+                                            <Icons.AlertOctagon size={14} color={a.color} style={{marginTop:2}}/>
+                                            <div><div style={{fontWeight:600}}>{a.type}</div><div style={{fontSize:'0.8rem'}}>{a.msg}</div></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <button className="nav-icon-btn"><Icons.CloudDownload size={20}/></button>
+                        <div className="user-profile" onClick={onEditProfile}>
+                            <Icons.User size={20}/> <span>{user.name}</span>
+                        </div>
+                    </div>
+                </header>
+            );
+        };
+
+        const Sidebar = ({ activeTab, setActiveTab, collapsed, toggleCollapse }) => {
+            // SOLO LOS 3 MENUS SOLICITADOS
             const items = [
                 { id: 'descargas', label: 'Descargas', icon: <Icons.Download size={20}/> },
                 { id: 'tolvas', label: 'Tolvas', icon: <IconTolva size={22}/> },
@@ -136,6 +278,11 @@
                             {i.icon} <span>{i.label}</span>
                         </div>
                     ))}
+                    <div className="sidebar-footer">
+                        <button className="nav-icon-btn" style={{color:'var(--text-light)', marginLeft:'auto'}} onClick={toggleCollapse}>
+                            {collapsed ? <Icons.ChevronRight/> : <Icons.ChevronLeft/>}
+                        </button>
+                    </div>
                 </div>
             );
         };
@@ -144,16 +291,18 @@
             const [darkMode, setDarkMode] = useState(false);
             const [activeTab, setActiveTab] = useState('descargas');
             const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-            const user = "Martin";
+            const [user, setUser] = useState({ name: 'Usuario', lastname: '', email: 'usuario@agdp.com', phone: '' });
+            const [isProfileOpen, setProfileOpen] = useState(false);
 
             useEffect(() => { document.body.className = darkMode ? 'dark-mode' : ''; }, [darkMode]);
 
-            const renderContent = () => {
+            // Helper para título
+            const getTitle = () => {
                 switch(activeTab) {
-                    case 'descargas': return <EmptyModule title="Descargas" />;
-                    case 'tolvas': return <EmptyModule title="Tolvas" />;
-                    case 'establecimientos': return <EmptyModule title="Establecimientos" />;
-                    default: return <EmptyModule title="Módulo Desconocido" />;
+                    case 'descargas': return 'Gestión de Descargas';
+                    case 'tolvas': return 'Gestión de Tolvas';
+                    case 'establecimientos': return 'Establecimientos';
+                    default: return 'Módulo';
                 }
             };
 
@@ -162,13 +311,29 @@
                     <Header 
                         darkMode={darkMode} 
                         toggleDarkMode={() => setDarkMode(!darkMode)} 
-                        toggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} 
+                        toggleSidebar={() => setSidebarCollapsed(false)} 
                         user={user}
+                        onEditProfile={() => setProfileOpen(true)}
                     />
                     <div className="main-layout">
-                        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} collapsed={sidebarCollapsed} />
-                        {renderContent()}
+                        <Sidebar 
+                            activeTab={activeTab} 
+                            setActiveTab={setActiveTab} 
+                            collapsed={sidebarCollapsed}
+                            toggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+                        />
+                        <main style={{flex:1, overflow:'hidden', display:'flex', flexDirection:'column'}}>
+                            {/* SIEMPRE RENDERIZA EL MODULO VACIO */}
+                            <EmptyModule title={getTitle()} />
+                        </main>
                     </div>
+                    
+                    <ProfileModal 
+                        isOpen={isProfileOpen} 
+                        onClose={() => setProfileOpen(false)} 
+                        user={user} 
+                        onSave={(data) => { setUser(data); setProfileOpen(false); }} 
+                    />
                 </div>
             );
         };
