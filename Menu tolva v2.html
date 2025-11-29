@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Equipos (Tolvas)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Flatpickr (CSS) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Flatpickr (JS) -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Flatpickr (Localización en Español) -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background-color: #f1f5f9; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        
+        /* Estilos para el Tooltip Global */
+        #global-tooltip {
+            pointer-events: none; /* Crucial para evitar parpadeos */
+            transition: opacity 0.1s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800">
+
+    <div id="app-container" class="min-h-screen p-4 md:p-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center py-12 text-slate-500">Cargando interfaz de Tolvas...</div>
+        </div>
+    </div>
+
+    <!-- Modal de Calibración -->
+    <div id="calibration-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"></div>
+
+    <!-- Tooltip Global (Z-Index alto para flotar sobre todo) -->
+    <div id="global-tooltip" class="fixed hidden z-[100] max-w-xs bg-slate-800 text-white text-xs rounded shadow-xl p-2 text-center transform -translate-x-1/2 mt-2"></div>
+    
+    <script>
+        // --- CONFIGURACIÓN Y MOCK DATA ---
+        const BRANDS_DATA = {
+            'AKRON': ['16', '22', '28', '30'],
+            'CESTARI': ['16', '22', '28', '30'],
+            'MONTECOR': ['16', '22', '28', '30']
+        };
+
+        const CALIBRATION_HISTORY = [
+            { date: '01/11/2023', sensitivity: 1850, cells: 80000, window: 10 },
+            { date: '15/06/2023', sensitivity: 1845, cells: 80000, window: 8 },
+            { date: '10/01/2023', sensitivity: 1800, cells: 60000, window: 8 },
+        ];
+        
+        let state = {
+            tolvas: [],
+            selectedIds: ['t1', 't2'],
+            previousSelection: null,
+            searchTerm: '',
+            currentPage: 1,
+            itemsPerPage: 6,
+            selectedDate: new Date(),
+            chartData: [],
+            weightChartInstance: null,
+            sortColumn: 'code', 
+            sortDirection: 'asc', 
+        };
+
+        let activeDocClickListener = null;
+
+        const colors = [
+            '#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed', 
+            '#db2777', '#0891b2', '#ea580c', '#65a30d', '#4f46e5',
+            '#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed', 
+            '#db2777', '#0891b2', '#ea580c', '#65a30d', '#4f46e5'
+        ];
+
+        // --- UTILIDADES ---
+        const isToday = (date) => {
+            const today = new Date();
+            const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            const normalizedToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            return normalizedDate.getTime() === normalizedToday.getTime();
+        };
+        
+        // --- TOOLTIP GLOBAL (CORREGIDO) ---
+        window.showTooltip = (event, text) => {
+            const tooltip = document.getElementById('global-tooltip');
+            const rect = event.currentTarget.getBoundingClientRect();
+            
+            tooltip.textContent = text;
+            tooltip.classList.remove('hidden');
+            
+            // CORRECCIÓN: Como es position:fixed, usamos las coordenadas del rect (viewport)
+            // directamente, SIN sumar window.scrollY/X.
+            const top = rect.bottom; 
+            const left = rect.left + (rect.width / 2);
+            
+            tooltip.style.top = `${top}px`;
+            tooltip.style.left = `${left}px`;
+        };
+
+        window.hideTooltip = () => {
+            const tooltip = document.getElementById('global-tooltip');
+            tooltip.classList.add('hidden');
+        };
+
+        // --- GENERADORES DE DATOS ---
+        let seed = 1;
+        const pseudoRandom = () => { const x = Math.sin(seed++) * 10000; return x - Math.floor(x); };
+        const resetSeed = (newSeed) => { seed = newSeed; };
+        const getSeedFromDate = (date) => parseInt(date.toISOString().slice(0, 10).replace(/-/g, ''), 10);
+
+        const generateMockTolvas = () => {
+            const brands = Object.keys(BRANDS_DATA);
+            return Array.from({ length: 20 }, (_, i) => {
+                const id = `t${i + 1}`;
+                const code = Math.floor(1000 + Math.random() * 9000).toString();
+                const brand = brands[i % brands.length];
+                const capacities = BRANDS_DATA[brand];
+                const capacity = capacities[i % capacities.length];
+                return {
+                    id, code,
+                    name: `TOLVA-${i + 1}-${brand}-LOTE-${Math.floor(Math.random()*10)} (IDENTIFICADOR LARGO)`,
+                    model: `${brand}-${capacity}`,
+                    linkVersion: i % 3 === 0 ? '5.5' : '5.6',
+                    androidVersion: 'Android 11',
+                    mode: Math.random() > 0.4 ? 'auto' : 'manual',
+                    color: colors[i]
+                };
+            });
+        };
+
+        const generateChartData = (tolvas, date) => {
+            resetSeed(getSeedFromDate(date)); 
+            const data = [];
+            const tolvaState = {};
+            tolvas.forEach(t => {
+                const modelCap = parseInt(t.model.split('-')[1]) * 1000 || 28000; 
+                tolvaState[t.id] = { weight: pseudoRandom() * 5000, status: pseudoRandom() > 0.5 ? 'loading' : 'idle', maxCap: modelCap };
+            });
+            for (let i = 0; i < 96; i++) {
+                const hour = Math.floor(i / 4);
+                const minute = (i % 4) * 15;
+                const timeLabel = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                const row = { time: timeLabel };
+                tolvas.forEach((t) => {
+                    const state = tolvaState[t.id];
+                    let change = 0;
+                    if (state.status === 'loading') {
+                        change = 800 + pseudoRandom() * 1200; 
+                        if (state.weight + change >= state.maxCap) { state.weight = state.maxCap; state.status = 'unloading'; } 
+                        else { state.weight += change; if (pseudoRandom() > 0.9) state.status = 'idle'; }
+                    } else if (state.status === 'unloading') {
+                        change = -(2500 + pseudoRandom() * 2000);
+                        if (state.weight + change <= 0) { state.weight = 0; state.status = 'idle'; } 
+                        else { state.weight += change; }
+                    } else if (state.status === 'idle') {
+                        change = (pseudoRandom() - 0.5) * 50; state.weight += change;
+                        if (pseudoRandom() > 0.8) {
+                            if(state.weight < 1000) state.status = 'loading';
+                            else if (state.weight > state.maxCap * 0.8) state.status = 'unloading';
+                            else state.status = pseudoRandom() > 0.4 ? 'loading' : 'unloading';
+                        }
+                    }
+                    if (state.weight < 0) state.weight = 0;
+                    if (state.weight > state.maxCap * 1.05) state.weight = state.maxCap;
+                    row[`${t.id}_weight`] = Math.round(state.weight);
+                    row[`${t.id}_active`] = Math.abs(change) > 100 ? 1 : 0;
+                });
+                data.push(row);
+            }
+            return data;
+        };
+
+        function setState(newState) {
+            Object.assign(state, newState);
+            render();
+        }
+
+        // --- RENDERIZADO PRINCIPAL ---
+        function render() {
+            if (activeDocClickListener) {
+                document.removeEventListener('click', activeDocClickListener);
+                activeDocClickListener = null;
+            }
+
+            const appContainer = document.getElementById('app-container');
+            const term = state.searchTerm.toLowerCase();
+            let filtered = state.tolvas.filter(t => 
+                t.name.toLowerCase().includes(term) || t.model.toLowerCase().includes(term) || t.code.includes(term)
+            );
+            if (state.sortColumn) {
+                const direction = state.sortDirection === 'asc' ? 1 : -1;
+                filtered.sort((a, b) => (a[state.sortColumn] < b[state.sortColumn] ? -1 : 1) * direction);
+            }
+            const paginated = filtered.slice((state.currentPage - 1) * state.itemsPerPage, state.currentPage * state.itemsPerPage);
+            const totalPages = Math.ceil(filtered.length / state.itemsPerPage);
+            const activeTolvas = state.tolvas.filter(t => state.selectedIds.includes(t.id));
+            
+            if (state.chartData.length === 0 || JSON.stringify(state.chartData) !== JSON.stringify(generateChartData(state.tolvas, state.selectedDate))) {
+                state.chartData = generateChartData(state.tolvas, state.selectedDate);
+            }
+
+            const getSortIcon = (col) => {
+                const color = state.sortColumn === col ? 'text-blue-600' : 'text-slate-300';
+                const path = state.sortDirection === 'asc' ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7";
+                const d = state.sortColumn === col ? path : "M8 9l4-4 4 4m0 6l-4 4-4-4";
+                return `<svg class="w-3 h-3 ml-1 ${color} flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${d}"></path></svg>`;
+            };
+
+            appContainer.innerHTML = `
+                <div class="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                    <div>
+                        <div class="flex items-center text-sm text-slate-500 mb-2">
+                            <span>Configuración</span><span class="mx-1">/</span><span class="font-semibold text-slate-800">Tolvas</span>
+                        </div>
+                        <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Gestión de Equipos</h1>
+                        <p class="text-slate-500 mt-1">Administra la flota de ${state.tolvas.length} monotolvas registradas.</p>
+                    </div>
+                </div>
+
+                <div class="max-w-7xl mx-auto space-y-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center bg-slate-50 gap-4">
+                            <div class="relative w-full sm:w-72">
+                                <input type="text" value="${state.searchTerm}" oninput="setState({ searchTerm: this.value, currentPage: 1 })" class="block w-full pl-3 pr-3 py-2 border border-slate-300 rounded-md bg-white text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none" placeholder="Buscar..." />
+                            </div>
+                            <div class="flex items-center space-x-2 text-xs text-slate-500">
+                                <span>${filtered.length === 0 ? '0' : (state.currentPage - 1) * state.itemsPerPage + 1} - ${Math.min(state.currentPage * state.itemsPerPage, filtered.length)} de ${filtered.length}</span>
+                                <button onclick="setState({ currentPage: Math.max(1, state.currentPage - 1) })" ${state.currentPage === 1 ? 'disabled' : ''} class="p-1 hover:bg-slate-200 rounded disabled:opacity-50">&lt;</button>
+                                <button onclick="setState({ currentPage: Math.min(${totalPages}, state.currentPage + 1) })" ${state.currentPage === totalPages || totalPages === 0 ? 'disabled' : ''} class="p-1 hover:bg-slate-200 rounded disabled:opacity-50">&gt;</button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-slate-200">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="w-12 px-6 py-4"></th>
+                                        <th onclick="handleSort('code')" class="cursor-pointer px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider hover:text-blue-600 whitespace-nowrap"><div class="flex items-center">Cód. Balanza ${getSortIcon('code')}</div></th>
+                                        <th onclick="handleSort('name')" class="cursor-pointer px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider hover:text-blue-600 whitespace-nowrap"><div class="flex items-center">Nombre Identificador ${getSortIcon('name')}</div></th>
+                                        <th onclick="handleSort('model')" class="cursor-pointer px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider hover:text-blue-600 whitespace-nowrap"><div class="flex items-center">Modelo ${getSortIcon('model')}</div></th>
+                                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase">Versiones</th>
+                                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase">Modo Operación</th>
+                                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase">Calibración</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-slate-200">
+                                    ${paginated.map(tolva => `
+                                        <tr class="hover:bg-slate-50 transition-colors ${state.selectedIds.includes(tolva.id) ? 'bg-blue-50/30' : ''}">
+                                            <td class="px-6 py-4"><input type="checkbox" onchange="toggleSelection('${tolva.id}')" ${state.selectedIds.includes(tolva.id) ? 'checked' : ''} class="h-4 w-4 text-blue-600 rounded cursor-pointer" /></td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-mono font-bold text-slate-700">${tolva.code}</td>
+                                            <td class="px-6 py-4 min-w-[250px] max-w-[350px]">
+                                                <div id="name-edit-${tolva.id}" onclick="initInlineEdit('name-edit-${tolva.id}', '${tolva.id}', 'name', '${tolva.name.replace(/'/g, "\\'")}')" class="group flex items-center cursor-pointer hover:bg-gray-50 px-2 py-1 -ml-2 rounded w-full">
+                                                    <span class="text-gray-900 font-medium truncate">${tolva.name}</span>
+                                                    <span class="ml-2 text-gray-400 opacity-0 group-hover:opacity-100">✎</span>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap min-w-[180px]">
+                                                <div id="model-select-${tolva.id}" onclick="event.stopPropagation(); initModelSelector('model-select-${tolva.id}', '${tolva.id}', '${tolva.model}')" class="group flex items-center cursor-pointer hover:bg-gray-50 px-2 py-1 -ml-2 rounded relative">
+                                                    <div class="flex flex-col"><span class="text-gray-900 font-bold text-sm">${tolva.model}</span><span class="text-[10px] text-gray-400">Click para cambiar</span></div>
+                                                    <span class="ml-2 text-gray-400 opacity-0 group-hover:opacity-100">✎</span>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 text-center"><span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">v${tolva.linkVersion}</span></td>
+                                            <td class="px-6 py-4 text-center">
+                                                <div class="flex items-center justify-center group relative cursor-pointer" 
+                                                     onmouseenter="showTooltip(event, '${tolva.mode === 'auto' ? 'Sensor Activo (Automático): La tolva detecta la carga automáticamente.' : 'Modo Manual: Requiere que el operario active y desactive la balanza.'}')" 
+                                                     onmouseleave="hideTooltip()">
+                                                    <button onclick="handleModeToggle('${tolva.id}')" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${tolva.mode === 'auto' ? 'bg-green-500' : 'bg-gray-300'}">
+                                                        <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${tolva.mode === 'auto' ? 'translate-x-5' : 'translate-x-0'}"></span>
+                                                    </button>
+                                                    <span class="ml-2 text-xs font-medium text-gray-500 w-16 text-left uppercase tracking-wide">${tolva.mode === 'auto' ? 'Auto' : 'Man'}</span>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 text-center">
+                                                <button onclick="openCalibrationModal(state.tolvas.find(t => t.id === '${tolva.id}'))" class="text-slate-500 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50">⚖️</button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    ${activeTolvas.length > 0 ? `
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-3 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                                <div class="flex items-center justify-between mb-6">
+                                    <h2 class="text-lg font-bold text-slate-800 flex items-center">⚡ Actividad Diaria (Comparativa)</h2>
+                                    <div class="flex items-center gap-4">
+                                        <span class="text-xs text-slate-500">Viendo ${activeTolvas.length} equipos</span>
+                                        <input type="text" id="flatpickr-date" class="pl-8 pr-3 py-1 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:border-blue-500 bg-white" placeholder="DD/MM/AAAA" />
+                                        <div id="date-tag" class="text-xs text-slate-400 border px-2 py-1 rounded bg-slate-50"></div>
+                                    </div>
+                                </div>
+                                <div id="operation-timeline-container" class="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                    ${activeTolvas.map(t => {
+                                        const timelineData = state.chartData.map(d => ({ time: d.time, active: d[`${t.id}_active`] }));
+                                        return `<div class="flex items-center mb-4">
+                                            <div class="w-32 pr-4 text-right overflow-hidden"><span class="text-sm font-semibold text-gray-700 block truncate" title="${t.name}">${t.name}</span></div>
+                                            <div class="flex-1 h-8 bg-gray-100 rounded overflow-hidden flex relative">
+                                                ${[0, 6, 12, 18, 24].map(h => `<div class="absolute h-full border-l border-gray-200 text-[10px] text-gray-400 pl-1 z-10" style="left: ${(h/24)*100}%">${h > 0 && h < 24 ? `${h}h` : ''}</div>`).join('')}
+                                                <div class="flex flex-row w-full h-full">
+                                                    ${timelineData.map((point) => {
+                                                        const parts = point.time.split(':');
+                                                        let endH = parseInt(parts[0]), endM = parseInt(parts[1]) + 15;
+                                                        if(endM >= 60) { endM -= 60; endH++; }
+                                                        const range = `[${point.time} - ${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}]`;
+                                                        return `<div class="h-full relative hover:opacity-80" 
+                                                                    onmouseenter="showTooltip(event, '${range} - ${point.active ? 'En Operación' : 'Inactivo'}')"
+                                                                    onmouseleave="hideTooltip()"
+                                                                    style="width: ${100/96}%; background-color: ${point.active ? t.color : 'transparent'}; opacity: ${point.active ? 0.8 : 1}">
+                                                                </div>`;
+                                                    }).join('')}
+                                                </div>
+                                            </div>
+                                        </div>`;
+                                    }).join('')}
+                                </div>
+                                <div class="flex justify-center mt-4 space-x-6 text-xs text-slate-500 border-t border-slate-100 pt-4">
+                                    <span class="flex items-center"><div class="w-3 h-3 bg-gray-100 border border-gray-200 mr-1"></div> Inactivo</span>
+                                    <span class="flex items-center"><div class="w-3 h-3 bg-gray-400 opacity-50 mr-1"></div> En Operación</span>
+                                </div>
+                            </div>
+                            <div class="lg:col-span-3 bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative">
+                                <div class="flex items-center justify-between mb-6">
+                                    <h2 class="text-lg font-bold text-slate-800 flex items-center">📈 Evolución de Carga (Kg)</h2>
+                                    ${state.previousSelection ? `<button onclick="setState({ selectedIds: state.previousSelection, previousSelection: null })" class="text-xs bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-100 hover:bg-indigo-100">Restaurar Vista Grupal</button>` : ''}
+                                </div>
+                                <div class="h-[400px] w-full"><canvas id="weight-chart-canvas"></canvas></div>
+                            </div>
+                        </div>
+                    ` : `<div class="text-center py-16 bg-white rounded-xl border border-dashed text-slate-400"><p>Sin datos</p></div>`}
+                </div>
+            `;
+
+            const dateInput = document.getElementById('flatpickr-date');
+            const dateTag = document.getElementById('date-tag');
+            if (dateInput) {
+                dateTag.innerHTML = isToday(state.selectedDate) ? 'HOY' : 'Histórico';
+                dateTag.className = `text-xs border px-2 py-1 rounded ${isToday(state.selectedDate) ? 'text-green-600 border-green-200 bg-green-50' : 'text-slate-400 bg-slate-50'}`;
+                if (!dateInput._flatpickr) flatpickr(dateInput, { dateFormat: "d/m/Y", locale: "es", defaultDate: state.selectedDate, onChange: (d) => setState({ selectedDate: d[0] }) });
+                else dateInput._flatpickr.setDate(state.selectedDate, false);
+            }
+            if (activeTolvas.length > 0) renderWeightChart();
+        }
+
+        window.handleSort = (col) => {
+            const dir = (state.sortColumn === col && state.sortDirection === 'asc') ? 'desc' : 'asc';
+            setState({ sortColumn: col, sortDirection: dir, currentPage: 1 });
+        };
+        window.handleModeToggle = (id) => {
+            const newTolvas = state.tolvas.map(t => t.id === id ? { ...t, mode: t.mode === 'auto' ? 'manual' : 'auto' } : t);
+            setState({ tolvas: newTolvas });
+        };
+        window.toggleSelection = (id) => {
+            const newSelected = state.selectedIds.includes(id) ? state.selectedIds.filter(x => x !== id) : [...state.selectedIds, id];
+            setState({ selectedIds: newSelected, previousSelection: null });
+        };
+        window.handleUpdate = (id, field, value) => {
+            const newTolvas = state.tolvas.map(t => t.id === id ? { ...t, [field]: value } : t);
+            setState({ tolvas: newTolvas });
+        };
+
+        window.initInlineEdit = (containerId, tolvaId, field, initialValue) => {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<input id="edit-${tolvaId}" type="text" value="${initialValue}" class="w-full px-2 py-1 text-sm border border-blue-400 rounded outline-none" />`;
+            const input = document.getElementById(`edit-${tolvaId}`);
+            input.focus();
+            const save = () => handleUpdate(tolvaId, field, input.value);
+            input.onblur = save;
+            input.onkeydown = (e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') render(); };
+        };
+
+        window.updateBrandSelection = (containerId, tolvaId, newBrand) => {
+            const newCap = BRANDS_DATA[newBrand][0];
+            initModelSelector(containerId, tolvaId, `${newBrand}-${newCap}`, true);
+        };
+        window.saveModelSelection = (tolvaId) => {
+            const brand = document.getElementById(`brand-select-${tolvaId}`).value;
+            const cap = document.getElementById(`cap-select-${tolvaId}`).value;
+            handleUpdate(tolvaId, 'model', `${brand}-${cap}`);
+        };
+
+        window.initModelSelector = (containerId, tolvaId, currentModel, isUpdate = false) => {
+            const container = document.getElementById(containerId);
+            if (!container) return; 
+
+            if (!isUpdate) {
+            }
+
+            const [brand, cap] = currentModel.split('-');
+            const selBrand = brand || 'AKRON';
+            const selCap = cap || '28';
+            const caps = BRANDS_DATA[selBrand];
+
+            container.innerHTML = `
+                <div id="popup-${tolvaId}" class="flex items-center space-x-1 bg-white p-1 rounded shadow-lg border border-blue-200 z-10 absolute -mt-2" onclick="event.stopPropagation()">
+                    <select id="brand-select-${tolvaId}" class="text-xs border rounded py-1" onchange="updateBrandSelection('${containerId}', '${tolvaId}', this.value)">
+                        ${Object.keys(BRANDS_DATA).map(b => `<option value="${b}" ${b === selBrand ? 'selected' : ''}>${b}</option>`).join('')}
+                    </select>
+                    <span>-</span>
+                    <select id="cap-select-${tolvaId}" class="text-xs border rounded py-1">
+                        ${caps.map(c => `<option value="${c}" ${c === selCap ? 'selected' : ''}>${c} TN</option>`).join('')}
+                    </select>
+                    <button onclick="saveModelSelection('${tolvaId}')" class="bg-blue-600 text-white p-1 rounded">✓</button>
+                    <button onclick="render()" class="text-gray-500 p-1">✕</button>
+                </div>
+            `;
+
+            if (activeDocClickListener) document.removeEventListener('click', activeDocClickListener);
+            
+            activeDocClickListener = (e) => {
+                const popup = document.getElementById(`popup-${tolvaId}`);
+                if (popup && !popup.contains(e.target) && !container.contains(e.target)) {
+                    render();
+                }
+            };
+            
+            setTimeout(() => document.addEventListener('click', activeDocClickListener), 0);
+        };
+
+        function renderWeightChart() {
+            if (state.weightChartInstance) state.weightChartInstance.destroy();
+            const ctx = document.getElementById('weight-chart-canvas');
+            if (!ctx) return;
+            const active = state.tolvas.filter(t => state.selectedIds.includes(t.id));
+            state.weightChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: state.chartData.map(d => d.time),
+                    datasets: active.map(t => ({
+                        label: t.name, data: state.chartData.map(d => d[`${t.id}_weight`]),
+                        borderColor: t.color, backgroundColor: t.color + '20', borderWidth: 2, pointRadius: 0, tension: 0.1,
+                        hidden: state.previousSelection && !state.selectedIds.includes(t.id)
+                    }))
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { x: { ticks: { maxTicksLimit: 12 }, grid: { display: false } }, y: { beginAtZero: true } },
+                    plugins: {
+                        legend: { 
+                            onClick: (e, item) => {
+                                const tId = active[item.datasetIndex].id;
+                                if (state.selectedIds.length === 1 && state.selectedIds[0] === tId) setState({ selectedIds: state.previousSelection || state.tolvas.slice(0,2).map(x=>x.id), previousSelection: null });
+                                else setState({ previousSelection: state.selectedIds, selectedIds: [tId] });
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        window.openCalibrationModal = (tolva) => {
+            const modal = document.getElementById('calibration-modal');
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden p-6 relative">
+                    <button onclick="document.getElementById('calibration-modal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">✕</button>
+                    <h3 class="text-lg font-bold mb-4">Historial de Calibración: ${tolva.name}</h3>
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-gray-50"><tr><th class="p-2 text-left">Fecha</th><th class="p-2">Sensibilidad</th><th class="p-2">Celdas</th></tr></thead>
+                        <tbody>${CALIBRATION_HISTORY.map(c => `<tr><td class="p-2">${c.date}</td><td class="p-2">${c.sensitivity}</td><td class="p-2">${c.cells}</td></tr>`).join('')}</tbody>
+                    </table>
+                </div>`;
+            modal.classList.remove('hidden');
+        };
+
+        window.onload = () => {
+            state.tolvas = generateMockTolvas();
+            state.chartData = generateChartData(state.tolvas, state.selectedDate);
+            render();
+        };
+    </script>
+</body>
+</html>
