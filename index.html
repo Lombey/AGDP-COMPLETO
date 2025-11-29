@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AGDP Dashboard | React</title>
+    
+    <!-- 1. REACT CORE -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- 2. LIBRERIAS EXTERNAS -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Flatpickr (Calendario) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Google Maps -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBixHiS7Z6kVhh0tN7g9NdZaKrFxSji140" async defer></script>
+    
+    <!-- PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- 3. FUENTES -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- 4. ESTILOS CSS -->
+    <style>
+        :root {
+            --primary: #204B42; 
+            --primary-hover: #163630;
+            --bg-body: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #0f172a;
+            --text-light: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6; 
+            --header-height: 64px;
+            --sidebar-width: 180px;
+            
+            /* Module Specifics */
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --input-bg: #ffffff;
+            --group-row-bg: #f0fdf4; 
+            --group-row-text: #166534; 
+            --badge-bg: #e0f2f1;
+            --badge-text: #204B42;
+            --group-active-bg: var(--surface);
+            --group-active-border: var(--success);
+            --group-active-text: var(--success);
+        }
+
+        body.dark-mode {
+            --primary: #2d6a5e;
+            --bg-body: #0f172a;       
+            --surface: #1e293b;       
+            --border: #334155;        
+            --text-main: #f1f5f9;     
+            --text-light: #94a3b8;    
+            --input-bg: #0f172a;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            --group-row-bg: #0c2e26; 
+            --group-row-text: #a7f3d0;
+            --badge-bg: #134e4a;
+            --badge-text: #ccfbf1;
+            --group-active-bg: #064e3b; 
+            --group-active-border: #059669; 
+            --group-active-text: #6ee7b7;
+        }
+
+        /* Flatpickr Dark Mode Overrides */
+        body.dark-mode .flatpickr-calendar { background: var(--surface); box-shadow: var(--shadow-lg); border: 1px solid var(--border); }
+        body.dark-mode .flatpickr-day { color: var(--text-main); }
+        body.dark-mode .flatpickr-day.selected { background: var(--primary); border-color: var(--primary); }
+        body.dark-mode .flatpickr-months .flatpickr-month { color: var(--text-main); fill: var(--text-main); }
+        body.dark-mode .flatpickr-weekdays { color: var(--text-light); }
+        body.dark-mode span.flatpickr-weekday { color: var(--text-light); }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); height: 100vh; overflow: hidden; }
+
+        /* HEADER & LAYOUT */
+        header { background-color: #204B42; height: var(--header-height); padding: 0 1.5rem; display: flex; justify-content: space-between; align-items: center; color: white; flex-shrink: 0; z-index: 50; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .brand { display: flex; align-items: center; gap: 1rem; }
+        .brand h1 { font-size: 1.1rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+        .logo-box { width:32px; height:32px; background:white; color:#204B42; font-weight:bold; display:flex; align-items:center; justify-content:center; border-radius:4px; font-size: 0.8rem; }
+        .version-badge { font-size: 0.7rem; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px; font-weight: 400; opacity: 0.9; }
+        .header-actions { display: flex; gap: 0.8rem; align-items: center; }
+        .user-type-badge { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem; display: flex; align-items: center; gap: 0.5rem; }
+        .nav-icon-btn { background: rgba(255,255,255,0.15); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; position: relative; transition: background 0.2s; }
+        .nav-icon-btn:hover { background: rgba(255,255,255,0.25); }
+        .notif-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 1px solid #204B42; }
+        .user-profile { display: flex; align-items: center; gap: 0.5rem; background: white; color: #204B42; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
+        
+        .app-container { display: flex; flex-direction: column; height: 100vh; }
+        .main-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
+
+        /* SIDEBAR */
+        .sidebar { width: var(--sidebar-width); background-color: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding-top: 1rem; transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 40; flex-shrink: 0; }
+        .sidebar.collapsed { margin-left: calc(var(--sidebar-width) * -1); }
+        .sidebar-item { display: flex; gap: 0.8rem; padding: 0.8rem 1.25rem; color: var(--text-light); cursor: pointer; font-size: 0.9rem; align-items: center; text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s; font-weight: 500; }
+        .sidebar-item:hover { background: var(--bg-body); color: var(--primary); }
+        .sidebar-item.active { color: var(--primary); background: rgba(32, 75, 66, 0.08); border-left-color: var(--primary); }
+        .sidebar-footer { margin-top: auto; padding: 1rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+
+        /* COMMON MODULE STYLES */
+        .module-container { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+        .dashboard-content { padding: 1rem; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; height: 100%; }
+        
+        .filters-panel { background: var(--surface); padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 1.25rem; box-shadow: var(--shadow-sm); }
+        .section-title { font-size: 1.1rem; font-weight: 600; color: var(--primary); margin:0; }
+
+        .kpi-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; flex-shrink: 0; }
+        .kpi-card { background: var(--surface); padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: center; position: relative; transition: all 0.2s; }
+        .kpi-card.clickable-unit:hover { border-color: var(--primary); box-shadow: var(--shadow-md); cursor: pointer; }
+        .kpi-header-row { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 0.25rem; }
+        .kpi-label { font-size: 0.7rem; text-transform: uppercase; font-weight: 600; color: var(--text-light); display: flex; align-items: center; gap: 0.3rem; }
+        .kpi-value { font-size: 1.25rem; font-weight: 700; color: var(--text-main); letter-spacing: -0.02em; }
+        .unit-toggle-pill { background-color: var(--badge-bg); color: var(--badge-text); padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; gap: 4px; transition: all 0.2s; }
+        .kpi-card.clickable-unit:hover .unit-toggle-pill { background-color: var(--primary); color: white; }
+
+        .controls-container { background-color: var(--surface); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 0.75rem; z-index: 10; flex-shrink: 0; }
+        .filters-row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+        
+        .custom-select-wrapper { position: relative; min-width: 130px; flex-grow: 1; }
+        .custom-select-trigger, .search-input, .date-input, .btn-std, .btn-group, .btn-group-item, .form-input, .form-select { height: 36px; display: flex; align-items: center; box-sizing: border-box; font-family: 'Inter', sans-serif; font-size: 0.85rem; border-radius: 0.375rem; }
+        
+        .btn-std, .btn { justify-content: center; gap: 0.5rem; padding: 0 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap; border: 1px solid transparent; }
+        .btn-primary { background-color: var(--primary); color: white; border-color: var(--primary); }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-outline { background-color: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background-color: var(--bg-body); border-color: var(--text-light); }
+        .btn-flash { color: var(--text-main); border: 1px solid var(--border); background: var(--surface); width: 180px; justify-content: center; }
+        .btn-flash.active { color: white; border: 1px solid var(--primary); background: var(--primary); }
+        .btn-square, .btn-icon { width: 36px; min-width: 36px; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; background: transparent; border: none; color: var(--text-light); }
+        .btn-icon:hover { background: var(--bg-body); color: var(--primary); border-radius: 4px; }
+
+        .custom-select-trigger { justify-content: space-between; padding: 0 0.75rem; background: var(--input-bg); border: 1px solid var(--border); cursor: pointer; color: var(--text-light); white-space: nowrap; overflow: hidden; user-select: none; }
+        .custom-select-trigger:hover { border-color: var(--primary); color: var(--text-main); }
+        .group-by-wrapper .custom-select-trigger { background-color: var(--surface); border-color: var(--success); color: var(--success); font-weight: 600; }
+        
+        .custom-options { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 0.375rem; margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; z-index: 50; max-height: 250px; overflow-y: auto; padding: 0.5rem; }
+        .custom-options.open { display: block; }
+        .option-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem; cursor: pointer; border-radius: 0.25rem; font-size: 0.9rem; color: var(--text-main); }
+        .option-item:hover { background-color: var(--bg-body); }
+        .dropdown-search { width: 100%; padding: 0.4rem; font-size: 0.8rem; border: 1px solid var(--border); border-radius: 0.25rem; margin-bottom: 0.5rem; background: var(--input-bg); color: var(--text-main); outline:none; }
+
+        .search-input-wrapper { position: relative; min-width: 160px; flex-grow: 1; }
+        .search-input { width: 100%; padding: 0 0.75rem 0 2.2rem; border: 1px solid var(--border); background: var(--input-bg); color: var(--text-main); }
+        .search-icon { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); color: var(--text-light); }
+        
+        .date-input-wrapper { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-light); }
+        .date-input { padding: 0 0.6rem; border: 1px solid var(--border); background: var(--input-bg); color: var(--text-main); width: 100px; cursor: pointer; }
+
+        .btn-group { display: flex; border: 1px solid var(--border); border-radius: 0.375rem; overflow: hidden; background: var(--input-bg); }
+        .btn-group-item { padding: 0 1rem; font-size: 0.85rem; cursor: pointer; background: transparent; border: none; border-right: 1px solid var(--border); color: var(--text-light); transition: all 0.2s; display: flex; align-items: center; gap: 0.4rem; justify-content: center; }
+        .btn-group-item:last-child { border-right: none; }
+        .btn-group-item:hover { background-color: var(--bg-body); color: var(--text-main); }
+        .btn-group-item.active { background-color: var(--primary); color: white; }
+        
+        .toggle-filter { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-light); cursor: pointer; user-select: none; }
+
+        /* Data Table */
+        .table-wrapper { background: var(--surface); border-radius: 0.5rem; border: 1px solid var(--border); box-shadow: var(--shadow-sm); overflow: auto; flex: 1; min-height: 300px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.8rem; }
+        thead { position: sticky; top: 0; z-index: 5; background-color: var(--bg-body); }
+        th, td { padding: 0.6rem 1rem; white-space: nowrap; border-bottom: 1px solid var(--border); }
+        th { text-align: left; font-weight: 600; color: var(--text-light); background-color: var(--bg-body); user-select: none; }
+        th.th-sortable { cursor: pointer; }
+        th.th-sortable:hover { background-color: var(--border); color: var(--text-main); }
+        td { color: var(--text-main); vertical-align: middle; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .row-grouped { background-color: var(--group-row-bg); font-weight: 600; color: var(--group-row-text); }
+        .val-badge { padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; display: inline-block; }
+        .val-ok { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .val-no { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .sort-icon { margin-left: 0.5rem; opacity: 0.4; font-size: 0.85em; display: inline-block; vertical-align: middle;}
+        .sort-icon.active { opacity: 1; color: var(--primary); }
+
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; flex-shrink: 0; }
+        .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1rem; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; height: 300px; overflow: hidden; }
+        .stat-box h4 { font-size: 0.85rem; font-weight: 600; color: var(--text-light); margin-bottom: 0.8rem; text-transform: uppercase; }
+        .canvas-container { flex: 1; position: relative; min-height: 0; }
+        .list-container { flex: 1; overflow-y: auto; padding-right: 0.5rem; }
+        .stat-list-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        .stat-list-val { font-weight: 600; color: var(--text-main); }
+        .stat-list-label { color: var(--text-light); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 70%; }
+        .legend-item { display: flex; align-items: center; font-size: 0.7rem; color: var(--text-light); width: 100%; margin-bottom: 2px; }
+        .legend-color { width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; flex-shrink: 0; }
+        .custom-legend { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; overflow-y: auto; max-height: 80px; }
+
+        /* Specific for Establishment & Tolvas Module */
+        .ha-badge { font-size: 0.75rem; color: var(--text-light); background: var(--bg-body); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 4px; }
+        .toggle-switch { position: relative; width: 36px; height: 20px; display: inline-block; vertical-align: middle; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(16px); }
+        .tooltip-container { position: relative; display: inline-flex; align-items: center; margin-left: 6px; cursor: help; }
+        .tooltip-text { visibility: hidden; width: 220px; background-color: #334155; color: #fff; text-align: center; border-radius: 6px; padding: 8px; position: absolute; z-index: 100; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 0.75rem; font-weight: 400; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); pointer-events: none; line-height: 1.4; }
+        .tooltip-text::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #334155 transparent transparent transparent; }
+        .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
+        
+        .timeline-row { display: flex; align-items: center; margin-bottom: 1rem; }
+        .timeline-label { width: 120px; padding-right: 1rem; text-align: right; font-size: 0.85rem; font-weight: 600; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .timeline-track { flex: 1; height: 32px; background: var(--bg-body); border-radius: 4px; position: relative; overflow: hidden; display: flex; border: 1px solid var(--border); }
+        .timeline-hour-marker { position: absolute; height: 100%; border-left: 1px solid var(--border); color: var(--text-light); font-size: 0.6rem; padding-left: 2px; top: 0; pointer-events: none; }
+        .timeline-segment { height: 100%; transition: opacity 0.2s; }
+        .timeline-segment:hover { opacity: 0.8; }
+        .charts-grid-tolva { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+
+        /* Modals & Overlays */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); opacity: 0; animation: fadeIn 0.2s forwards; }
+        @keyframes fadeIn { to { opacity: 1; } }
+        .modal-card { background: var(--surface); width: 100%; max-width: 480px; max-height: 90vh; border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); transform: scale(0.95); animation: scaleUp 0.2s forwards; }
+        .modal-card.modal-lg { max-width: 900px; }
+        @keyframes scaleUp { to { transform: scale(1); } }
+        .modal-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 1.1rem; flex-shrink: 0; }
+        .modal-body { padding: 1.25rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
+        .modal-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 0.75rem; background: var(--bg-body); border-radius: 0 0 12px 12px; flex-shrink: 0; }
+        .form-grid { display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .form-label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); }
+        .loading-overlay { position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(255,255,255,0.85); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 1rem; backdrop-filter: blur(3px); }
+        .spinner { width: 48px; height: 48px; border: 5px solid var(--border); border-bottom-color: var(--primary); border-radius: 50%; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) { 
+            .sidebar { position: fixed; height: 100%; left: -100%; box-shadow: 5px 0 15px rgba(0,0,0,0.1); } 
+            .sidebar.mobile-open { left: 0; } 
+            .user-type-badge, .brand span { display: none; }
+            .kpi-container { grid-template-columns: 1fr 1fr; }
+            .filters-row { flex-direction: column; align-items: stretch; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .col-config-wrapper { display: block !important; width: 36px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- 5. LÓGICA REACT -->
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+        
+        const IconWrapper = ({ children, size=24, color="currentColor", ...props }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>
+        );
+        const Icons = {
+            Moon: (p) => <IconWrapper {...p}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></IconWrapper>,
+            Sun: (p) => <IconWrapper {...p}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></IconWrapper>,
+            Bell: (p) => <IconWrapper {...p}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></IconWrapper>,
+            CloudDownload: (p) => <IconWrapper {...p}><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/></IconWrapper>,
+            User: (p) => <IconWrapper {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></IconWrapper>,
+            Menu: (p) => <IconWrapper {...p}><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></IconWrapper>,
+            ChevronLeft: (p) => <IconWrapper {...p}><path d="m15 18-6-6 6-6"/></IconWrapper>,
+            ChevronRight: (p) => <IconWrapper {...p}><path d="m9 18 6-6-6-6"/></IconWrapper>,
+            ChevronDown: (p) => <IconWrapper {...p}><path d="m6 9 6 6 6-6"/></IconWrapper>,
+            X: (p) => <IconWrapper {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></IconWrapper>,
+            Eye: (p) => <IconWrapper {...p}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></IconWrapper>,
+            EyeOff: (p) => <IconWrapper {...p}><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></IconWrapper>,
+            AlertOctagon: (p) => <IconWrapper {...p}><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></IconWrapper>,
+            Plus: (p) => <IconWrapper {...p}><path d="M5 12h14"/><path d="M12 5v14"/></IconWrapper>,
+            Edit2: (p) => <IconWrapper {...p}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></IconWrapper>,
+            Trash2: (p) => <IconWrapper {...p}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></IconWrapper>,
+            Info: (p) => <IconWrapper {...p}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></IconWrapper>,
+            Layout: (p) => <IconWrapper {...p}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="21" y2="9"/></IconWrapper>,
+            Activity: (p) => <IconWrapper {...p}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></IconWrapper>,
+            BarChart: (p) => <IconWrapper {...p}><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></IconWrapper>,
+            Settings: (p) => <IconWrapper {...p}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></IconWrapper>
+        };
+
+        // --- COMPONENTE: EMPTY MODULE ---
+        const EmptyModule = ({ title }) => (
+            <div className="module-content">
+                <div className="empty-state-icon"><Icons.CloudDownload size={64} /></div>
+                <h2 style={{fontWeight: 400, color: 'var(--text-main)'}}>{title}</h2>
+                <p style={{fontSize: '0.9rem', marginTop: '0.5rem'}}>Módulo en construcción</p>
+            </div>
+        );
+
+        // --- COMPONENTE: PROFILE MODAL ---
+        const ProfileModal = ({ isOpen, onClose, user, onSave }) => {
+            if (!isOpen) return null;
+            const [formData, setFormData] = useState({ ...user });
+            const [showPass, setShowPass] = useState({ old: false, new: false, confirm: false });
+            return (
+                <div className="modal-overlay" onClick={onClose} style={{opacity:1, pointerEvents:'all'}}>
+                    <div className="modal-card" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Mi Perfil</h3>
+                            <button className="btn-icon" onClick={onClose}><Icons.X size={20}/></button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="form-group"><label className="form-label">Nombre</label><input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="form-input" /></div>
+                            <div className="form-group"><label className="form-label">Apellido</label><input value={formData.lastname} onChange={e => setFormData({...formData, lastname: e.target.value})} className="form-input" /></div>
+                            <div className="form-group"><label className="form-label">Email</label><input value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="form-input" /></div>
+                            <div className="form-group"><label className="form-label">Teléfono</label><input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="form-input" /></div>
+                            <div className="section-title">Cambiar Contraseña</div>
+                            <div className="form-group"><label className="form-label">Contraseña Anterior</label><div className="password-wrapper"><input type={showPass.old ? "text" : "password"} className="form-input" style={{paddingRight: '2.5rem'}} placeholder="Clave actual" /><button className="toggle-pass-btn" onClick={() => setShowPass({...showPass, old: !showPass.old})}>{showPass.old ? <Icons.EyeOff size={16}/> : <Icons.Eye size={16}/>}</button></div></div>
+                            <div className="form-group"><label className="form-label">Nueva Contraseña</label><div className="password-wrapper"><input type={showPass.new ? "text" : "password"} className="form-input" style={{paddingRight: '2.5rem'}} placeholder="Nueva clave" /><button className="toggle-pass-btn" onClick={() => setShowPass({...showPass, new: !showPass.new})}>{showPass.new ? <Icons.EyeOff size={16}/> : <Icons.Eye size={16}/>}</button></div></div>
+                        </div>
+                        <div className="modal-footer"><button className="btn-std btn-outline" onClick={onClose}>Cancelar</button><button className="btn-std btn-primary" onClick={() => onSave(formData)}>Guardar</button></div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- COMPONENTE: HEADER ---
+        const Header = ({ darkMode, toggleDarkMode, toggleSidebar, user, onEditProfile }) => {
+            const [showNotif, setShowNotif] = useState(false);
+            const alerts = [
+                { type: 'Modificación', color: 'var(--info)', msg: 'El tolvero modificó humedad.', time: '14:30' },
+                { type: 'Sobrepeso', color: 'var(--warning)', msg: 'Exceso detectado.', time: '12:15' },
+                { type: 'Falla', color: 'var(--danger)', msg: 'Sensor fallando.', time: '10:45' }
+            ];
+            return (
+                <header>
+                    <div className="brand">
+                        <button className="nav-icon-btn" onClick={toggleSidebar} style={{marginRight:'1rem'}}><Icons.Menu size={24}/></button>
+                        <div className="logo-box">AG</div>
+                        <h1>Descargas <span>| AGDP</span> <span className="version-badge">v4.23</span></h1>
+                    </div>
+                    <div className="header-actions">
+                        <div className="user-type-badge">Productor: <strong>2218PH</strong></div>
+                        <button className="nav-icon-btn" onClick={toggleDarkMode}>{darkMode ? <Icons.Sun size={20}/> : <Icons.Moon size={20}/>}</button>
+                        <div style={{position:'relative'}}>
+                            <button className="nav-icon-btn" onClick={() => setShowNotif(!showNotif)}><Icons.Bell size={20}/> <span className="notif-dot"></span></button>
+                            {showNotif && (
+                                <div className="dropdown">
+                                    <div className="dd-header">Alertas Recientes</div>
+                                    {alerts.map((a,i) => (
+                                        <div key={i} className="dd-item">
+                                            <Icons.AlertOctagon size={14} color={a.color} style={{marginTop:2}}/>
+                                            <div><div style={{fontWeight:600}}>{a.type}</div><div style={{fontSize:'0.8rem'}}>{a.msg}</div></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <button className="nav-icon-btn"><Icons.CloudDownload size={20}/></button>
+                        <div className="user-profile" onClick={onEditProfile}><Icons.User size={20}/> <span>{user.name}</span></div>
+                    </div>
+                </header>
+            );
+        };
+
+        // --- COMPONENTE: SIDEBAR ---
+        const Sidebar = ({ activeTab, setActiveTab, collapsed, toggleCollapse }) => {
+            const items = [
+                { id: 'descargas', label: 'Descargas' },
+                { id: 'tolvas', label: 'Tolvas' },
+                { id: 'establecimientos', label: 'Establecimientos' },
+            ];
+            return (
+                <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+                    {items.map(i => (
+                        <div key={i.id} className={`sidebar-item ${activeTab===i.id ? 'active' : ''}`} onClick={() => setActiveTab(i.id)}>
+                             <span>{i.label}</span>
+                        </div>
+                    ))}
+                    <div className="sidebar-footer">
+                        <button className="nav-icon-btn" style={{color:'var(--text-light)', marginLeft:'auto'}} onClick={toggleCollapse}>
+                            {collapsed ? <Icons.ChevronRight/> : <Icons.ChevronLeft/>}
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- HELPER: GENERACIÓN DE DATOS TOLVAS ---
+        let seed = 1;
+        const pseudoRandom = () => { const x = Math.sin(seed++) * 10000; return x - Math.floor(x); };
+        const resetSeed = (newSeed) => { seed = newSeed; };
+        const getSeedFromDate = (date) => parseInt(date.toISOString().slice(0, 10).replace(/-/g, ''), 10);
+
+        const BRANDS_DATA = { 'AKRON': ['16', '22', '28', '30'], 'CESTARI': ['16', '22', '28', '30'], 'MONTECOR': ['16', '22', '28', '30'] };
+        const TOLVA_COLORS = ['#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed', '#db2777', '#0891b2', '#ea580c', '#65a30d', '#4f46e5'];
+
+        // --- COMPONENTE: TOLVAS MODULE ---
+        const TolvasModule = () => {
+            const [tolvas, setTolvas] = useState([]);
+            const [selectedIds, setSelectedIds] = useState([]);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [currentPage, setCurrentPage] = useState(1);
+            const [selectedDate, setSelectedDate] = useState(new Date());
+            const [chartData, setChartData] = useState([]);
+            const [calibrationModalOpen, setCalibrationModalOpen] = useState(false);
+            const [currentTolva, setCurrentTolva] = useState(null);
+            const [editingCell, setEditingCell] = useState(null);
+            const [activeModelSelector, setActiveModelSelector] = useState(null);
+
+            const datePickerRef = useRef(null);
+            const weightChartRef = useRef(null);
+            const weightChartInstance = useRef(null);
+            const fpInstance = useRef(null);
+
+            const itemsPerPage = 6;
+
+            // Init Data
+            useEffect(() => {
+                const brands = Object.keys(BRANDS_DATA);
+                const mockTolvas = Array.from({ length: 20 }, (_, i) => ({
+                    id: `t${i + 1}`,
+                    code: Math.floor(1000 + Math.random() * 9000).toString(),
+                    name: `TOLVA-${i + 1}-${brands[i % brands.length]}-LOTE-${Math.floor(Math.random()*10)}`,
+                    model: `${brands[i % brands.length]}-${BRANDS_DATA[brands[i % brands.length]][0]}`,
+                    linkVersion: i % 3 === 0 ? '5.5' : '5.6',
+                    mode: Math.random() > 0.4 ? 'auto' : 'manual',
+                    color: TOLVA_COLORS[i % TOLVA_COLORS.length]
+                }));
+                setTolvas(mockTolvas);
+                setSelectedIds([mockTolvas[0].id, mockTolvas[1].id]);
+            }, []);
+
+            // Init Flatpickr
+            useEffect(() => {
+                if(datePickerRef.current) {
+                    fpInstance.current = flatpickr(datePickerRef.current, {
+                        dateFormat: "d/m/Y",
+                        defaultDate: new Date(),
+                        locale: "es",
+                        onChange: (sel) => { if(sel.length) setSelectedDate(sel[0]); }
+                    });
+                }
+            }, []);
+
+            // Generate Chart Data on Date/Tolvas Change
+            useEffect(() => {
+                if(tolvas.length === 0) return;
+                resetSeed(getSeedFromDate(selectedDate));
+                const newData = [];
+                const tolvaState = {};
+                tolvas.forEach(t => {
+                    tolvaState[t.id] = { weight: pseudoRandom() * 5000, status: pseudoRandom() > 0.5 ? 'loading' : 'idle', maxCap: 28000 };
+                });
+
+                for (let i = 0; i < 96; i++) { // 15 min intervals
+                    const hour = Math.floor(i / 4).toString().padStart(2, '0');
+                    const minute = ((i % 4) * 15).toString().padStart(2, '0');
+                    const row = { time: `${hour}:${minute}` };
+                    tolvas.forEach(t => {
+                        const s = tolvaState[t.id];
+                        let change = 0;
+                        if (s.status === 'loading') {
+                            change = 800 + pseudoRandom() * 1200;
+                            if (s.weight + change >= s.maxCap) { s.weight = s.maxCap; s.status = 'unloading'; }
+                            else { s.weight += change; if (pseudoRandom() > 0.9) s.status = 'idle'; }
+                        } else if (s.status === 'unloading') {
+                            change = -(2500 + pseudoRandom() * 2000);
+                            if (s.weight + change <= 0) { s.weight = 0; s.status = 'idle'; }
+                            else { s.weight += change; }
+                        } else {
+                            change = (pseudoRandom() - 0.5) * 50;
+                            s.weight += change;
+                            if (pseudoRandom() > 0.8) s.status = s.weight < 1000 ? 'loading' : 'unloading';
+                        }
+                        if(s.weight < 0) s.weight = 0;
+                        row[`${t.id}_weight`] = Math.round(s.weight);
+                        row[`${t.id}_active`] = Math.abs(change) > 100 ? 1 : 0;
+                    });
+                    newData.push(row);
+                }
+                setChartData(newData);
+            }, [selectedDate, tolvas]);
+
+            // Render Chart
+            useEffect(() => {
+                if(!weightChartRef.current || chartData.length === 0) return;
+                if(weightChartInstance.current) weightChartInstance.current.destroy();
+
+                const activeTolvas = tolvas.filter(t => selectedIds.includes(t.id));
+                const datasets = activeTolvas.map(t => ({
+                    label: t.name,
+                    data: chartData.map(d => d[`${t.id}_weight`]),
+                    borderColor: t.color,
+                    backgroundColor: t.color + '20',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.1
+                }));
+
+                weightChartInstance.current = new Chart(weightChartRef.current, {
+                    type: 'line',
+                    data: { labels: chartData.map(d => d.time), datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { ticks: { maxTicksLimit: 12, color: '#94a3b8' }, grid: { display: false } },
+                            y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#e2e8f0' } }
+                        },
+                        plugins: { legend: { labels: { color: '#475569' } } }
+                    }
+                });
+            }, [chartData, selectedIds, tolvas]);
+
+            // Logic
+            const filteredTolvas = tolvas.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()) || t.code.includes(searchTerm));
+            const paginatedTolvas = filteredTolvas.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+            const totalPages = Math.ceil(filteredTolvas.length / itemsPerPage);
+
+            const toggleSelection = (id) => {
+                setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+            };
+
+            const handleModeToggle = (id) => {
+                setTolvas(prev => prev.map(t => t.id === id ? { ...t, mode: t.mode === 'auto' ? 'manual' : 'auto' } : t));
+            };
+
+            const openCalib = (t) => { setCurrentTolva(t); setCalibrationModalOpen(true); };
+            
+            const handleEditSave = (id, field, val) => {
+                setTolvas(prev => prev.map(t => t.id === id ? { ...t, [field]: val } : t));
+                setEditingCell(null);
+            };
+            
+            const handleModelChange = (id, newBrand, newCap) => {
+                const newModel = `${newBrand}-${newCap}`;
+                handleEditSave(id, 'model', newModel);
+                setActiveModelSelector(null);
+            };
+
+            return (
+                <div className="module-container">
+                    <div className="dashboard-content">
+                        {/* Header Módulo */}
+                        <div className="filters-panel">
+                            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                                <h2 className="section-title">Gestión de Equipos ({tolvas.length})</h2>
+                                <div className="date-input-wrapper">
+                                    <input type="text" ref={datePickerRef} className="date-input" placeholder="Seleccionar fecha" />
+                                </div>
+                            </div>
+                            
+                            {/* Controles Tabla */}
+                            <div className="filters-row" style={{justifyContent:'space-between'}}>
+                                <div className="search-input-wrapper" style={{maxWidth:'300px'}}>
+                                    <i className="ph ph-magnifying-glass search-icon"></i>
+                                    <input type="text" className="search-input" placeholder="Buscar tolva..." value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }} />
+                                </div>
+                                <div className="btn-group">
+                                    <button className="btn-group-item" disabled={currentPage===1} onClick={()=>setCurrentPage(p=>p-1)}><Icons.ChevronLeft/></button>
+                                    <span style={{padding:'0 1rem', display:'flex', alignItems:'center', fontSize:'0.85rem'}}>{currentPage} / {totalPages || 1}</span>
+                                    <button className="btn-group-item" disabled={currentPage===totalPages || totalPages===0} onClick={()=>setCurrentPage(p=>p+1)}><Icons.ChevronRight/></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Tabla Tolvas */}
+                        <div className="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style={{width:40}}>Ver</th>
+                                        <th>Código</th>
+                                        <th>Nombre (Click para editar)</th>
+                                        <th>Modelo</th>
+                                        <th className="text-center">Versión</th>
+                                        <th className="text-center">Modo</th>
+                                        <th className="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {paginatedTolvas.map(t => (
+                                        <tr key={t.id} style={selectedIds.includes(t.id) ? {backgroundColor:'var(--group-row-bg)'} : {}}>
+                                            <td className="text-center"><input type="checkbox" checked={selectedIds.includes(t.id)} onChange={() => toggleSelection(t.id)}/></td>
+                                            <td style={{fontFamily:'monospace', fontWeight:600}}>{t.code}</td>
+                                            <td onClick={() => setEditingCell({id: t.id, field:'name', val: t.name})} style={{cursor:'pointer'}}>
+                                                {editingCell?.id === t.id && editingCell?.field === 'name' ? (
+                                                    <input autoFocus className="form-input" style={{height:28}} value={editingCell.val} onChange={e=>setEditingCell({...editingCell, val:e.target.value})} onBlur={()=>handleEditSave(t.id, 'name', editingCell.val)} onKeyDown={e=>e.key==='Enter'&&handleEditSave(t.id, 'name', editingCell.val)} />
+                                                ) : (
+                                                    <div style={{display:'flex', alignItems:'center', gap:6}}>
+                                                        {t.name} <Icons.Edit2 size={12} style={{opacity:0.3}}/>
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td style={{position:'relative'}}>
+                                                <div onClick={() => setActiveModelSelector(activeModelSelector === t.id ? null : t.id)} style={{cursor:'pointer', fontWeight:600, color:'var(--text-light)', display:'flex', alignItems:'center', gap:4}}>
+                                                    {t.model} <Icons.ChevronDown size={12}/>
+                                                </div>
+                                                {activeModelSelector === t.id && (
+                                                    <div className="custom-options open" style={{width:180}}>
+                                                        {Object.keys(BRANDS_DATA).map(brand => (
+                                                            <div key={brand} style={{padding:'4px 8px', fontSize:'0.75rem', fontWeight:'bold', background:'var(--bg-body)'}}>{brand}</div>
+                                                        ))}
+                                                        <div className="option-item" onClick={() => handleModelChange(t.id, 'AKRON', '28')}>AKRON-28</div>
+                                                        <div className="option-item" onClick={() => handleModelChange(t.id, 'CESTARI', '22')}>CESTARI-22</div>
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="text-center"><span className="val-badge val-ok">v{t.linkVersion}</span></td>
+                                            <td className="text-center">
+                                                <div onClick={() => handleModeToggle(t.id)} style={{cursor:'pointer', display:'inline-flex', alignItems:'center', gap:6, padding:'2px 8px', borderRadius:12, background: t.mode==='auto'?'#dcfce7':'#e2e8f0', color: t.mode==='auto'?'#166534':'#64748b', fontSize:'0.75rem', fontWeight:600}}>
+                                                    {t.mode === 'auto' ? 'AUTO' : 'MANUAL'}
+                                                </div>
+                                            </td>
+                                            <td className="text-center">
+                                                <button className="btn-icon" onClick={() => openCalib(t)} title="Calibración"><Icons.Settings size={18}/></button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Gráficos */}
+                        {selectedIds.length > 0 ? (
+                            <div className="charts-grid-tolva">
+                                {/* Timeline */}
+                                <div className="stat-box" style={{height:'auto', minHeight:250}}>
+                                    <h4>Actividad Diaria</h4>
+                                    <div className="list-container" style={{overflowX:'auto'}}>
+                                        {tolvas.filter(t => selectedIds.includes(t.id)).map(t => {
+                                            const timeline = chartData.map(d => d[`${t.id}_active`]);
+                                            return (
+                                                <div key={t.id} className="timeline-row">
+                                                    <div className="timeline-label" title={t.name}>{t.name}</div>
+                                                    <div className="timeline-track">
+                                                        {[0,6,12,18].map(h => <div key={h} className="timeline-hour-marker" style={{left: `${(h/24)*100}%`}}></div>)}
+                                                        {timeline.map((active, idx) => (
+                                                            <div key={idx} className="timeline-segment" style={{width:`${100/96}%`, backgroundColor: active ? t.color : 'transparent'}}></div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                        <div style={{display:'flex', justifyContent:'center', gap:'1rem', fontSize:'0.75rem', color:'var(--text-light)', marginTop:'0.5rem'}}>
+                                            <div style={{display:'flex', alignItems:'center', gap:4}}><div style={{width:10, height:10, background:'#e2e8f0'}}></div> Inactivo</div>
+                                            <div style={{display:'flex', alignItems:'center', gap:4}}><div style={{width:10, height:10, background:'var(--primary)'}}></div> Operativo</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* Weight Chart */}
+                                <div className="stat-box" style={{height:400}}>
+                                    <h4>Evolución de Carga (Kg)</h4>
+                                    <div className="canvas-container">
+                                        <canvas ref={weightChartRef}></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="stat-box" style={{display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-light)'}}>
+                                <p>Seleccione al menos una tolva para ver estadísticas.</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Modal Calibración */}
+                    {calibrationModalOpen && currentTolva && (
+                        <div className="modal-overlay" style={{opacity:1, pointerEvents:'all'}}>
+                            <div className="modal-card">
+                                <div className="modal-header">
+                                    <h3>Calibración: {currentTolva.model}</h3>
+                                    <button className="btn-icon" onClick={() => setCalibrationModalOpen(false)}><Icons.X/></button>
+                                </div>
+                                <div className="modal-body">
+                                    <div className="form-grid" style={{gridTemplateColumns:'1fr 1fr 1fr', padding:0, gap:'0.5rem'}}>
+                                        <div style={{background:'var(--bg-body)', padding:'0.5rem', borderRadius:6, textAlign:'center'}}>
+                                            <div style={{fontSize:'0.7rem', color:'var(--text-light)'}}>Sensibilidad</div>
+                                            <div style={{fontSize:'1.1rem', fontWeight:700}}>1850</div>
+                                        </div>
+                                        <div style={{background:'var(--bg-body)', padding:'0.5rem', borderRadius:6, textAlign:'center'}}>
+                                            <div style={{fontSize:'0.7rem', color:'var(--text-light)'}}>Celdas</div>
+                                            <div style={{fontSize:'1.1rem', fontWeight:700}}>80k</div>
+                                        </div>
+                                        <div style={{background:'var(--bg-body)', padding:'0.5rem', borderRadius:6, textAlign:'center'}}>
+                                            <div style={{fontSize:'0.7rem', color:'var(--text-light)'}}>Ventana</div>
+                                            <div style={{fontSize:'1.1rem', fontWeight:700}}>10</div>
+                                        </div>
+                                    </div>
+                                    <h4 style={{fontSize:'0.9rem', fontWeight:600, marginTop:'1rem', marginBottom:'0.5rem'}}>Historial</h4>
+                                    <table style={{width:'100%', fontSize:'0.8rem', borderCollapse:'collapse'}}>
+                                        <thead style={{background:'var(--bg-body)', textAlign:'left'}}>
+                                            <tr><th style={{padding:8}}>Fecha</th><th>Sens.</th><th>Celdas</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr><td style={{padding:8, borderBottom:'1px solid var(--border)'}}>01/11/2023</td><td style={{borderBottom:'1px solid var(--border)'}}>1850</td><td style={{borderBottom:'1px solid var(--border)'}}>80000</td></tr>
+                                            <tr><td style={{padding:8, borderBottom:'1px solid var(--border)'}}>15/06/2023</td><td style={{borderBottom:'1px solid var(--border)'}}>1845</td><td style={{borderBottom:'1px solid var(--border)'}}>80000</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div className="modal-footer">
+                                    <button className="btn btn-outline" onClick={() => setCalibrationModalOpen(false)}>Cerrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // --- COMPONENTES: DESCARGAS, ESTABLECIMIENTOS ---
+        const DownloadsModule = () => {
+            const URL_MANIAGRO = "https://docs.google.com/spreadsheets/d/1IDhJ8E7h5d7ezknTK-BaJkF66ydHAy4zZAv4FLl9u0k/edit?usp=sharing";
+            const CHART_COLORS = ['#204B42', '#10b981', '#f59e0b', '#3b82f6', '#64748b', '#ef4444', '#8b5cf6'];
+            const GROUP_DIMS = [{ key: 'DESTINO DESCARGA', label: 'Destino' }, { key: 'FECHA PESADA', label: 'Fecha' }, { key: 'ESTABLECIMIENTO', label: 'Establecimiento' }, { key: 'LOTE', label: 'Lote' }, { key: 'PRODUCTO', label: 'Producto' }, { key: 'PRODUCTOR', label: 'Productor' }, { key: 'CONTRATISTA', label: 'Contratista' }, { key: 'TOLVA', label: 'Tolva' }];
+
+            const [data, setData] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [displayUnit, setDisplayUnit] = useState('TON'); 
+            const [filterDestType, setFilterDestType] = useState('ALL'); 
+            const [groupByKeys, setGroupByKeys] = useState([]);
+            const [hideLow, setHideLow] = useState(true);
+            const [isQuickGroup, setIsQuickGroup] = useState(false);
+            const [groupOptionsOpen, setGroupOptionsOpen] = useState(false);
+            
+            const [colConfig, setColConfig] = useState({ 'VALIDACION': { label: 'Validación', visible: false, dimensionKey: 'VALIDACION' }, 'STATUS': { label: 'Estado', visible: true, width: '50px' }, 'FECHA PESADA': { label: 'Fecha', visible: true, dimensionKey: 'FECHA PESADA' }, 'HORA PESADA': { label: 'Hora', visible: true, dimensionKey: 'HORA PESADA' }, 'PRODUCTOR': { label: 'Productor', visible: false, dimensionKey: 'PRODUCTOR' }, 'CONTRATISTA': { label: 'Contratista', visible: true, dimensionKey: 'CONTRATISTA' }, 'ESTABLECIMIENTO': { label: 'Establecimiento', visible: true, dimensionKey: 'ESTABLECIMIENTO' }, 'LOTE': { label: 'Lote', visible: true, dimensionKey: 'LOTE' }, 'PRODUCTO': { label: 'Producto', visible: true, dimensionKey: 'PRODUCTO' }, 'DESTINO DESCARGA': { label: 'Destino', visible: true, dimensionKey: 'DESTINO DESCARGA' }, 'CARTA DE PORTE': { label: 'Carta Porte', visible: false, dimensionKey: 'CARTA DE PORTE' }, 'PESO_NUM': { label: 'Kg Húmedo', visible: true, align: 'right' }, 'TOLVA': { label: 'Tolva', visible: true, dimensionKey: 'TOLVA' }, 'ACTIONS': { label: '', visible: true, width: '1%' }, 'UBICACION': { label: 'Ubic.', visible: true, align: 'center', width: '1%' } });
+            const [filters, setFilters] = useState({ est: [], lote: [], prod: [], productor: [], contratista: [], tolva: [], search: '', dateFrom: null, dateTo: null });
+            const [showMap, setShowMap] = useState(false);
+            const [importUrl, setImportUrl] = useState(URL_MANIAGRO);
+            const [showImportModal, setShowImportModal] = useState(false);
+            const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+
+            const chartEstRef = useRef(null), chartProdRef = useRef(null), mapRef = useRef(null), mapInstance = useRef(null), chartInstances = useRef({}), dateFromRef = useRef(null), dateToRef = useRef(null), fpFromInstance = useRef(null), fpToInstance = useRef(null);
+
+            useEffect(() => { loadData(importUrl); }, [importUrl]);
+            const loadData = async (url) => {
+                setLoading(true);
+                try {
+                    const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                    const csvUrl = match ? `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv` : url;
+                    const res = await fetch(csvUrl); const text = await res.text(); const parsed = parseCSV(text); setData(parsed);
+                    const dates = parsed.map(d => d.DATE_OBJ).filter(Boolean);
+                    if (dates.length > 0) {
+                        const maxDate = new Date(Math.max.apply(null, dates));
+                        setFilters(prev => ({...prev, dateFrom: maxDate, dateTo: maxDate}));
+                        if(fpFromInstance.current) fpFromInstance.current.setDate(maxDate);
+                        if(fpToInstance.current) fpToInstance.current.setDate(maxDate);
+                    }
+                } catch (e) { console.error(e); } finally { setLoading(false); }
+            };
+            useEffect(() => {
+                if (dateFromRef.current) fpFromInstance.current = flatpickr(dateFromRef.current, { dateFormat: "d/m/Y", onChange: (sel) => setFilters(f => ({...f, dateFrom: sel[0]})) });
+                if (dateToRef.current) fpToInstance.current = flatpickr(dateToRef.current, { dateFormat: "d/m/Y", onChange: (sel) => setFilters(f => ({...f, dateTo: sel[0]})) });
+            }, []);
+            const parseCSV = (csv) => {
+                const lines = csv.split('\n'); if(lines.length < 2) return []; const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+                return lines.slice(1).map((line, idx) => { if(!line.trim()) return null; const vals = parseCSVLine(line); const row = { id: idx }; headers.forEach((h, i) => row[h] = vals[i]?.trim().replace(/^"|"$/g, '') || ''); row.PESO_NUM = parseFloat(row['PESO HUMEDO Kg']) || 0; row.DATE_OBJ = parseDateStrict(row['FECHA PESADA']); row.LAT_NUM = parseFloat(row['LATITUD']) || 0; row.LNG_NUM = parseFloat(row['LONGITUD']) || 0; const tipo = (row['TIPO'] || '').toUpperCase(); row.IS_DEFECT = tipo.includes('DEFECTUOSA'); row.IS_OVERWEIGHT = row.PESO_NUM > 30000; row.IS_AUTO = tipo.includes('AUT') || tipo.includes('MODIFICADA'); row.IS_VALID = (row['VALIZACION'] && row['VALIZACION'].toUpperCase() === 'TRUE'); return row; }).filter(Boolean);
+            };
+            const parseCSVLine = (text) => { let p = '', row = [''], i = 0, r = 0, s = !0, l; for (l of text) { if ('"' === l) { if (s && l === p) row[r] += l; s = !s; } else if (',' === l && s) l = row[++r] = ''; else row[r] += l; p = l; } return row; };
+            const parseDateStrict = (str) => { if(!str) return null; const parts = str.replace(/-/g, '/').split('/'); if (parts.length !== 3) return null; let d, m, y; if(parts[0].length === 4) { y=+parts[0]; m=+parts[1]-1; d=+parts[2]; } else { d=+parts[0]; m=+parts[1]-1; y=+parts[2]; } return new Date(y, m, d); };
+            const filteredData = useMemo(() => {
+                return data.filter(r => {
+                    if (hideLow && r.PESO_NUM < 100) return false;
+                    if (filters.dateFrom && r.DATE_OBJ) { const d = new Date(r.DATE_OBJ); d.setHours(0,0,0,0); const f = new Date(filters.dateFrom); f.setHours(0,0,0,0); if (d < f) return false; }
+                    if (filters.dateTo && r.DATE_OBJ) { const d = new Date(r.DATE_OBJ); d.setHours(0,0,0,0); const f = new Date(filters.dateTo); f.setHours(23,59,59,999); if (d > f) return false; }
+                    if (filters.est.length && !filters.est.includes(r['ESTABLECIMIENTO'])) return false; if (filters.lote.length && !filters.lote.includes(r['LOTE'])) return false; if (filters.prod.length && !filters.prod.includes(r['PRODUCTO'])) return false; if (filters.productor.length && !filters.productor.includes(r['PRODUCTOR'])) return false; if (filters.tolva.length && !filters.tolva.includes(r['TOLVA'])) return false; if (filters.contratista.length && !filters.contratista.includes(r['CONTRATISTA'])) return false;
+                    if (filters.search && !r['DESTINO DESCARGA'].toLowerCase().includes(filters.search.toLowerCase())) return false;
+                    const dest = (r['DESTINO DESCARGA'] || '').toUpperCase(); const isSilo = dest.includes('BOLSA') || dest.includes('SILO') || /^\d{2}-[A-Z]/.test(dest);
+                    if (filterDestType === 'SILO' && !isSilo) return false; if (filterDestType === 'TRUCK' && isSilo) return false;
+                    return true;
+                });
+            }, [data, filters, hideLow, filterDestType]);
+            const displayData = useMemo(() => {
+                let result = [];
+                if (groupByKeys.length === 0) { result = [...filteredData]; } else {
+                    const groups = {}; filteredData.forEach(r => { const key = groupByKeys.map(k => r[k] || '-').join('|'); if (!groups[key]) { groups[key] = { isGroup: true, count: 0, PESO_NUM: 0, items: [], ...Object.fromEntries(groupByKeys.map(k => [k, r[k]])) }; } groups[key].PESO_NUM += r.PESO_NUM; groups[key].count++; groups[key].items.push(r); }); result = Object.values(groups);
+                }
+                if (sortConfig.key) { result.sort((a,b) => { let valA = a[sortConfig.key], valB = b[sortConfig.key]; if (sortConfig.key.includes('FECHA')) { valA = a.DATE_OBJ?a.DATE_OBJ.getTime():0; valB = b.DATE_OBJ?b.DATE_OBJ.getTime():0; } else if(typeof valA==='string'){ valA=valA.toLowerCase(); valB=valB?valB.toLowerCase():''; } if (valA < valB) return sortConfig.direction==='asc'?-1:1; if (valA > valB) return sortConfig.direction==='asc'?1:-1; return 0; }); }
+                return result;
+            }, [filteredData, groupByKeys, sortConfig]);
+            const getAggregatedData = (data, key) => { const map = {}; data.forEach(r => { const k = r[key] || 'Sin Datos'; map[k] = (map[k] || 0) + r.PESO_NUM; }); return Object.entries(map).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value); };
+            useEffect(() => {
+                if (!window.Chart || loading) return;
+                const renderChart = (ref, type, dataArray, label) => {
+                    if (chartInstances.current[ref.id]) chartInstances.current[ref.id].destroy();
+                    const topData = dataArray.slice(0, 15); const labels = topData.map(d => d.label); const values = topData.map(d => displayUnit === 'TON' ? d.value/1000 : d.value);
+                    chartInstances.current[ref.id] = new Chart(ref, { type: type, data: { labels, datasets: [{ label, data: values, backgroundColor: CHART_COLORS, borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: type === 'doughnut', position: 'right' } } } });
+                };
+                const estData = getAggregatedData(filteredData, 'ESTABLECIMIENTO'); const prodData = getAggregatedData(filteredData, 'PRODUCTO');
+                if (chartEstRef.current) renderChart(chartEstRef.current, 'bar', estData, 'Totales'); if (chartProdRef.current) renderChart(chartProdRef.current, 'doughnut', prodData, 'Totales');
+            }, [filteredData, displayUnit, loading]);
+            const toggleQuickGroup = () => { if (isQuickGroup) { setGroupByKeys([]); setIsQuickGroup(false); } else { setGroupByKeys(['FECHA PESADA', 'ESTABLECIMIENTO', 'LOTE', 'PRODUCTO', 'DESTINO DESCARGA', 'CONTRATISTA']); setIsQuickGroup(true); } };
+            const toggleGroupKey = (key) => { setGroupByKeys(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]); };
+            const kpis = useMemo(() => { let truckC = 0, truckW = 0, siloC = 0, siloW = 0; filteredData.forEach(r => { const dest = (r['DESTINO DESCARGA'] || '').toUpperCase(); const isSilo = dest.includes('BOLSA') || dest.includes('SILO') || /^\d{2}-[A-Z]/.test(dest); if (isSilo) { siloC++; siloW += r.PESO_NUM; } else { truckC++; truckW += r.PESO_NUM; } }); return { truckC, truckW, siloC, siloW }; }, [filteredData]);
+            const getUniqueOptions = (key) => [...new Set(data.map(r => r[key]).filter(Boolean))].sort();
+            const formatWeight = (val) => displayUnit === 'TON' ? (val/1000).toLocaleString('es-AR', {maximumFractionDigits: 1}) + ' t' : val.toLocaleString('es-AR', {maximumFractionDigits: 0}) + ' kg';
+            const handleFilterChange = (key, val, checked) => { setFilters(prev => { const current = prev[key]; const next = checked ? [...current, val] : current.filter(item => item !== val); return { ...prev, [key]: next }; }); };
+            const handleSort = (key) => { setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' })); };
+            const CustomSelect = ({ label, options, selected, onChange }) => { const [isOpen, setIsOpen] = useState(false); const [search, setSearch] = useState(''); const filteredOpts = options.filter(o => o.toLowerCase().includes(search.toLowerCase())); return ( <div className="custom-select-wrapper"> <div className="custom-select-trigger" onClick={() => setIsOpen(!isOpen)}> <span>{label} {selected.length > 0 && `(${selected.length})`}</span> <i className="ph ph-caret-down"></i> </div> {isOpen && ( <div className="custom-options open"> <input type="text" className="dropdown-search" placeholder="Buscar..." onClick={e=>e.stopPropagation()} onChange={e=>setSearch(e.target.value)} /> {filteredOpts.map(opt => ( <div key={opt} className="option-item" onClick={(e) => { e.stopPropagation(); onChange(opt, !selected.includes(opt)); }}> <input type="checkbox" checked={selected.includes(opt)} readOnly /> {opt} </div> ))} </div> )} {isOpen && <div style={{position:'fixed', inset:0, zIndex:40}} onClick={() => setIsOpen(false)}></div>} </div> ); };
+            const ColConfigDropdown = () => { const [isOpen, setIsOpen] = useState(false); return ( <div className="custom-select-wrapper col-config-wrapper" style={{width:'auto'}}> <div className="custom-select-trigger btn-square" onClick={() => setIsOpen(!isOpen)} title="Configurar Columnas"> <i className="ph ph-gear"></i> </div> {isOpen && ( <div className="custom-options open" style={{right:0, left:'auto', width:200}}> {Object.keys(colConfig).map(key => ( <div key={key} className="option-item" onClick={(e) => { e.stopPropagation(); setColConfig(prev => ({...prev, [key]: {...prev[key], visible: !prev[key].visible}})); }}> <input type="checkbox" checked={colConfig[key].visible} readOnly /> {colConfig[key].label || key} </div> ))} </div> )} {isOpen && <div style={{position:'fixed', inset:0, zIndex:40}} onClick={() => setIsOpen(false)}></div>} </div> ); };
+
+            return (
+                <div className="module-container">
+                    {loading && <div className="loading-overlay"><div className="spinner"></div><div className="loading-text">Procesando...</div></div>}
+                    <div className="dashboard-content">
+                        <section className="kpi-container">
+                            <div className="kpi-card" title="Total de camiones descargados"> <div className="kpi-label"><i className="ph ph-truck"></i> Camiones</div> <div className="kpi-value">{kpis.truckC}</div> <div style={{fontSize:'0.75rem', color:'var(--text-light)'}}>Viajes</div> </div>
+                            <div className="kpi-card clickable-unit" title="Clic para cambiar unidad (Kg/Ton)" onClick={() => setDisplayUnit(prev => prev==='TON'?'KG':'TON')}> <div className="kpi-header-row"> <div className="kpi-label">Camiones</div> <div className="unit-toggle-pill">{displayUnit} <i className="ph ph-arrows-left-right"></i></div> </div> <div className="kpi-value">{formatWeight(kpis.truckW).replace(' t','').replace(' kg','')}</div> <div style={{fontSize:'0.75rem', color:'var(--text-light)'}}>Húmedo</div> </div>
+                            <div className="kpi-card" title="Total de cargas a silo bolsa"> <div className="kpi-label"><i className="ph ph-cylinder" style={{transform: 'rotate(90deg)'}}></i> Silos</div> <div className="kpi-value">{kpis.siloC}</div> <div style={{fontSize:'0.75rem', color:'var(--text-light)'}}>Cargas</div> </div>
+                            <div className="kpi-card clickable-unit" title="Clic para cambiar unidad (Kg/Ton)" onClick={() => setDisplayUnit(prev => prev==='TON'?'KG':'TON')}> <div className="kpi-header-row"> <div className="kpi-label">Silos</div> <div className="unit-toggle-pill">{displayUnit} <i className="ph ph-arrows-left-right"></i></div> </div> <div className="kpi-value">{formatWeight(kpis.siloW).replace(' t','').replace(' kg','')}</div> <div style={{fontSize:'0.75rem', color:'var(--text-light)'}}>Húmedo</div> </div>
+                        </section>
+                        <section className="controls-container">
+                            <div className="filters-row">
+                                <div className="date-input-wrapper"> <span>Desde:</span> <input type="text" ref={dateFromRef} className="date-input" placeholder="DD/MM/AAAA" /> </div>
+                                <div className="date-input-wrapper"> <span>Hasta:</span> <input type="text" ref={dateToRef} className="date-input" placeholder="DD/MM/AAAA" /> </div>
+                                <button className="btn-std btn-outline" title="Ver descargas de hoy" onClick={() => { const today = new Date(); if(fpFromInstance.current) fpFromInstance.current.setDate(today); if(fpToInstance.current) fpToInstance.current.setDate(today); setFilters(f => ({...f, dateFrom: today, dateTo: today})); }}>Hoy</button>
+                                <CustomSelect label="Productor" options={getUniqueOptions('PRODUCTOR')} selected={filters.productor} onChange={(val, c) => handleFilterChange('productor', val, c)} /> <CustomSelect label="Establecimiento" options={getUniqueOptions('ESTABLECIMIENTO')} selected={filters.est} onChange={(val, c) => handleFilterChange('est', val, c)} /> <CustomSelect label="Lote" options={getUniqueOptions('LOTE')} selected={filters.lote} onChange={(val, c) => handleFilterChange('lote', val, c)} /> <CustomSelect label="Contratista" options={getUniqueOptions('CONTRATISTA')} selected={filters.contratista} onChange={(val, c) => handleFilterChange('contratista', val, c)} /> <CustomSelect label="Tolva" options={getUniqueOptions('TOLVA')} selected={filters.tolva} onChange={(val, c) => handleFilterChange('tolva', val, c)} /> <CustomSelect label="Producto" options={getUniqueOptions('PRODUCTO')} selected={filters.prod} onChange={(val, c) => handleFilterChange('prod', val, c)} />
+                                <div className="search-input-wrapper"> <i className="ph ph-magnifying-glass search-icon"></i> <input type="text" className="search-input" placeholder="Buscar Destino..." onChange={e => setFilters({...filters, search: e.target.value})} /> </div>
+                                <div className="btn-group"> <button className={`btn-group-item ${filterDestType==='ALL'?'active':''}`} onClick={() => setFilterDestType('ALL')} title="Ver Todo">Todos</button> <button className={`btn-group-item ${filterDestType==='TRUCK'?'active':''}`} onClick={() => setFilterDestType('TRUCK')} title="Solo Camiones"><i className="ph ph-truck"></i></button> <button className={`btn-group-item ${filterDestType==='SILO'?'active':''}`} onClick={() => setFilterDestType('SILO')} title="Solo Silos"><i className="ph ph-cylinder" style={{transform:'rotate(90deg)'}}></i></button> </div>
+                                <label className="toggle-filter" title="Excluir descargas menores a 100kg"> <input type="checkbox" checked={hideLow} onChange={e => setHideLow(e.target.checked)} /> Ocultar &lt; 100kg </label>
+                            </div>
+                            <div className="filters-row" style={{justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: '0.75rem'}}>
+                                <div style={{display:'flex', gap:'0.5rem', alignItems:'center'}}>
+                                    <span style={{fontSize:'0.8rem', fontWeight:600, color:'var(--text-light)'}}>AGRUPAR:</span>
+                                    <div className="custom-select-wrapper group-by-wrapper"> <div className="custom-select-trigger" onClick={() => setGroupOptionsOpen(!groupOptionsOpen)} style={groupByKeys.length > 0 ? {backgroundColor:'var(--group-active-bg)', borderColor:'var(--group-active-border)', color:'var(--group-active-text)'} : {}}> <span>{groupByKeys.length > 0 ? `${groupByKeys.length} Dimensión(es)` : '(Sin Agrupar)'}</span> <i className="ph ph-stack"></i> </div> {groupOptionsOpen && ( <div className="custom-options open"> {GROUP_DIMS.map(dim => ( <div key={dim.key} className="option-item" onClick={(e) => { e.stopPropagation(); toggleGroupKey(dim.key); }}> <input type="checkbox" checked={groupByKeys.includes(dim.key)} readOnly /> {dim.label} </div> ))} </div> )} {groupOptionsOpen && <div style={{position:'fixed', inset:0, zIndex:40}} onClick={() => setGroupOptionsOpen(false)}></div>} </div>
+                                    <button className={`btn-std btn-flash ${isQuickGroup ? 'active' : ''}`} onClick={toggleQuickGroup} title="Agrupamiento rápido por destinos y lotes"> <i className={`ph ${isQuickGroup ? 'ph-list-dashes' : 'ph-stack-plus'}`}></i> {isQuickGroup ? 'Desagrupar' : 'Agrupar Destinos'} </button>
+                                    <button className="btn-square btn-outline" title="Limpiar todos los filtros" style={{borderColor: 'var(--danger)', color: 'var(--danger)'}} onClick={() => { setFilters({est:[],lote:[],prod:[],productor:[],contratista:[],tolva:[],search:'',dateFrom:null,dateTo:null}); setGroupByKeys([]); setIsQuickGroup(false); setHideLow(false); setDisplayUnit('TON'); }}> <i className="ph ph-trash"></i> </button>
+                                </div>
+                                <div style={{display:'flex', gap:'0.5rem'}}> <button className="btn-square btn-outline" onClick={() => setShowImportModal(true)} title="Importar Datos"><i className="ph ph-cloud-arrow-down"></i></button> <button className="btn-std btn-primary" onClick={() => setShowMap(true)} title="Ver mapa con todas las descargas"><i className="ph ph-map-trifold"></i> Ver Mapa Global</button> <ColConfigDropdown /> </div>
+                            </div>
+                        </section>
+                        <section className="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style={{width:30}}></th>
+                                        {Object.keys(colConfig).map(key => {
+                                            const conf = colConfig[key];
+                                            let show = conf.visible;
+                                            if(groupByKeys.length > 0) { if(!['STATUS', 'PESO_NUM', 'ACTIONS', 'UBICACION'].includes(key) && !groupByKeys.includes(conf.dimensionKey)) show = false; }
+                                            if(!show) return null;
+                                            return ( <th key={key} className={key==='ACTIONS'||key==='UBICACION'?'col-tight':'th-sortable'} style={{width:conf.width, textAlign:conf.align}} onClick={() => handleSort(key)}> {conf.label} {!['ACTIONS', 'UBICACION'].includes(key) && <i className={`ph ${sortConfig.key === key ? (sortConfig.direction==='asc'?'ph-caret-up':'ph-caret-down') : 'ph-caret-up-down'} sort-icon ${sortConfig.key===key?'active':''}`}></i>} </th> );
+                                        })}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {displayData.map((row, i) => (
+                                        <tr key={i} className={row.isGroup ? 'row-grouped' : ''}>
+                                            <td><input type="checkbox"/></td>
+                                            {Object.keys(colConfig).map(key => {
+                                                const conf = colConfig[key];
+                                                let show = conf.visible;
+                                                if(groupByKeys.length > 0) { if(!['STATUS', 'PESO_NUM', 'ACTIONS', 'UBICACION'].includes(key) && !groupByKeys.includes(conf.dimensionKey)) show = false; }
+                                                if(!show) return null;
+                                                let content;
+                                                if(key === 'STATUS') { if (row.isGroup) content = <span style={{background:'#dbeafe', padding:'2px 6px', borderRadius:'4px', fontSize:'0.7rem', color:'#1e40af', fontWeight:'bold'}}>{row.count} Regs</span>; else content = row.IS_DEFECT ? <i className="ph ph-warning-diamond" style={{color:'var(--danger)', fontSize:'1.2rem'}} title="Carga Defectuosa"></i> : row.IS_OVERWEIGHT ? <i className="ph ph-warning" style={{color:'var(--warning)', fontSize:'1.2rem'}} title="Sobrepeso"></i> : <i className="ph ph-check-circle" style={{color:'var(--success)', fontSize:'1.2rem'}} title="Validada"></i>; } else if (key === 'VALIDACION') { content = row.isGroup ? '-' : <span className={`val-badge ${row.IS_VALID?'val-ok':'val-no'}`}>{row.IS_VALID?'Validada':'No Val.'}</span>; } else if (key === 'ACTIONS') { content = !row.isGroup ? <button className="btn-icon" title="Editar"><i className="ph ph-pencil-simple"></i></button> : null; } else if (key === 'UBICACION') { content = (row.LAT_NUM || row.isGroup) ? <div className="map-trigger" onClick={() => setShowMap(true)} title="Ver en mapa"><i className="ph ph-map-pin"></i></div> : null; } else if (key === 'PESO_NUM') { content = <b>{formatWeight(row.PESO_NUM).replace(' t','').replace(' kg','')}</b>; } else { content = row.isGroup ? (groupByKeys.includes(conf.dimensionKey) ? <strong>{row[key]}</strong> : '-') : row[key]; }
+                                                return <td key={key} className={key==='ACTIONS'||key==='UBICACION'?'col-tight':''} style={{textAlign:conf.align}}>{content}</td>;
+                                            })}
+                                        </tr>
+                                    ))}
+                                    {displayData.length === 0 && <tr><td colSpan="20" style={{textAlign:'center', padding:'2rem'}}>Sin datos</td></tr>}
+                                </tbody>
+                            </table>
+                        </section>
+                        <section className="stats-grid">
+                            <div className="stat-box"> <h4>Totales por Establecimiento</h4> <div className="canvas-container"><canvas ref={chartEstRef}></canvas></div> </div>
+                            <div className="stat-box"> <h4>Totales por Cultivo</h4> <div className="canvas-container"><canvas ref={chartProdRef}></canvas></div> </div>
+                            <div className="stat-box"> <h4>Ranking Tolvas</h4> <div className="list-container"> {getAggregatedData(filteredData, 'TOLVA').slice(0,8).map((d,i) => ( <div key={i} className="stat-list-item"> <span className="stat-list-label" title={d.label}>{d.label}</span> <span className="stat-list-val">{formatWeight(d.value)}</span> </div> ))} </div> </div>
+                            <div className="stat-box"> <h4>Ranking Contratistas</h4> <div className="list-container"> {getAggregatedData(filteredData, 'CONTRATISTA').slice(0,8).map((d,i) => ( <div key={i} className="stat-list-item"> <span className="stat-list-label" title={d.label}>{d.label}</span> <span className="stat-list-val">{formatWeight(d.value)}</span> </div> ))} </div> </div>
+                        </section>
+                    </div>
+                    {showMap && ( <div className="modal-overlay" style={{opacity:1, pointerEvents:'all'}}> <div className="modal-card modal-lg"> <div className="modal-header"><h3>Mapa Global</h3><button className="btn-square btn-outline" onClick={()=>setShowMap(false)}><i className="ph ph-x"></i></button></div> <div style={{flex:1}} ref={mapRef}></div> </div> </div> )}
+                    {showImportModal && ( <div className="modal-overlay" style={{opacity:1, pointerEvents:'all'}}> <div className="modal-card"> <div className="modal-header"><h3>Importar Datos</h3><button className="btn-square btn-outline" onClick={()=>setShowImportModal(false)}><i className="ph ph-x"></i></button></div> <div className="modal-body"> <input type="text" className="search-input" value={importUrl} onChange={e=>setImportUrl(e.target.value)} /> <div className="btn-group"> <button className="btn-group-item active">Maniagro</button> <button className="btn-group-item">AGD</button> </div> </div> <div className="modal-footer"><button className="btn-std btn-primary" onClick={()=>setShowImportModal(false)}>Cargar</button></div> </div> </div> )}
+                </div>
+            );
+        };
+
+        const EstablishmentConfig = () => {
+            const [filterProducer, setFilterProducer] = useState('');
+            const [filterEst, setFilterEst] = useState('');
+            const [editingCell, setEditingCell] = useState({ id: null, value: '' });
+            const [data, setData] = useState([
+                { id: 1, code: 'EST001-AR', name: 'La Estancia', owner: 'Propietario Prueba', country: 'Argentina', province: 'Córdoba', city: 'Río Cuarto', agreement: 'CONV-2023-A', sendToTablet: true, expanded: true, lots: [ { id: 101, code: 'L001-N', name: 'Lote Norte', hectares: 150, sendToTablet: true }, { id: 102, code: 'L002-S', name: 'Lote Sur', hectares: 85.5, sendToTablet: false } ] },
+                { id: 2, code: 'EST002-BA', name: 'El Trébol', owner: 'Juan Pérez', country: 'Argentina', province: 'Buenos Aires', city: 'Tandil', agreement: '', sendToTablet: false, expanded: false, lots: [ { id: 201, code: 'L003-A', name: 'Lote Ruta', hectares: 200, sendToTablet: true } ] }
+            ]);
+            const [isModalOpen, setIsModalOpen] = useState(false);
+            const [modalMode, setModalMode] = useState('EST'); 
+            const [currentItem, setCurrentItem] = useState(null);
+            const [parentId, setParentId] = useState(null);
+            const [showAdvanced, setShowAdvanced] = useState(false);
+
+            const startEditing = (lot) => { setEditingCell({ id: lot.id, value: lot.hectares }); };
+            const saveEditing = (estId, lotId) => {
+                const newValue = parseFloat(editingCell.value); const finalValue = isNaN(newValue) ? 0 : newValue;
+                setData(prev => prev.map(est => { if (est.id !== estId) return est; return { ...est, lots: est.lots.map(l => l.id === lotId ? { ...l, hectares: finalValue } : l) }; }));
+                setEditingCell({ id: null, value: '' });
+            };
+            const handleKeyDown = (e, estId, lotId) => { if (e.key === 'Enter') saveEditing(estId, lotId); if (e.key === 'Escape') setEditingCell({ id: null, value: '' }); };
+            const locationData = { 'Argentina': { 'Córdoba': ['Córdoba Capital', 'Río Cuarto', 'Villa Carlos Paz'], 'Buenos Aires': ['La Plata', 'Tandil', 'Bahía Blanca'] } };
+            const toggleExpand = (id) => { setData(prev => prev.map(item => item.id === id ? {...item, expanded: !item.expanded} : item)); };
+            const toggleTablet = (estId, lotId = null) => { setData(prev => prev.map(est => { if (est.id !== estId) return est; if (lotId === null) { return { ...est, sendToTablet: !est.sendToTablet }; } else { return { ...est, lots: est.lots.map(l => l.id === lotId ? {...l, sendToTablet: !l.sendToTablet} : l) }; } })); };
+            const handleDelete = (estId, lotId = null) => { if (!confirm("¿Seguro que desea eliminar este registro?")) return; if (lotId === null) { setData(prev => prev.filter(p => p.id !== estId)); } else { setData(prev => prev.map(est => { if (est.id !== estId) return est; return { ...est, lots: est.lots.filter(l => l.id !== lotId) }; })); } };
+            const openModal = (mode, item = null, parent = null) => {
+                setModalMode(mode); setParentId(parent);
+                if (item) { setCurrentItem({...item}); if (mode === 'EST' && item.agreement) { setShowAdvanced(true); } else { setShowAdvanced(false); } } 
+                else { if (mode === 'EST') { setCurrentItem({ code: '', name: '', owner: 'Propietario Prueba', country: 'Argentina', province: '', city: '', agreement: '', sendToTablet: true }); } else { setCurrentItem({ code: '', name: '', hectares: '', sendToTablet: true }); } setShowAdvanced(false); }
+                setIsModalOpen(true);
+            };
+            const handleSave = () => {
+                if (!currentItem.code || !currentItem.name) return alert("Código y Nombre requeridos");
+                if (currentItem.code.length > 12) return alert("Código máx 12 caracteres");
+                if (currentItem.name.length > 25) return alert("Nombre máx 25 caracteres");
+                if (modalMode === 'EST') {
+                    if (currentItem.id) { setData(prev => prev.map(est => est.id === currentItem.id ? { ...est, ...currentItem } : est)); } else { const newEst = { ...currentItem, id: Date.now(), lots: [], expanded: true }; setData(prev => [...prev, newEst]); }
+                } else {
+                    const lotData = { ...currentItem, hectares: parseFloat(currentItem.hectares) || 0 };
+                    if (currentItem.id) { setData(prev => prev.map(est => { if (est.id !== parentId) return est; return { ...est, lots: est.lots.map(l => l.id === currentItem.id ? { ...l, ...lotData } : l) }; })); } else { setData(prev => prev.map(est => { if (est.id !== parentId) return est; return { ...est, lots: [...est.lots, { ...lotData, id: Date.now() }] }; })); }
+                }
+                setIsModalOpen(false);
+            };
+            const filteredData = data.filter(item => { const matchProd = filterProducer ? item.owner.toLowerCase().includes(filterProducer.toLowerCase()) : true; const matchEst = filterEst ? item.name.toLowerCase().includes(filterEst.toLowerCase()) : true; return matchProd && matchEst; });
+            const TooltipInfo = () => ( <div className="tooltip-container"> <Icons.Info size={14} color="var(--info)" /> <span className="tooltip-text"> Si está activo, este campo aparecerá disponible para elegir en la tablet. Si está desactivado, no se podrá elegir. </span> </div> );
+
+            return (
+                <div className="module-container">
+                    <div className="dashboard-content">
+                        <div className="filters-panel">
+                            <h2 className="section-title">Establecimientos y Lotes</h2>
+                            <div className="filters-row">
+                                <input placeholder="Filtrar por Productor/Dueño..." className="form-input" style={{flex:1, minWidth:'200px'}} value={filterProducer} onChange={e => setFilterProducer(e.target.value)} />
+                                <input placeholder="Filtrar por Establecimiento..." className="form-input" style={{flex:1, minWidth:'200px'}} value={filterEst} onChange={e => setFilterEst(e.target.value)} />
+                                <div style={{flex:'0 0 auto'}}> <button className="btn btn-primary" onClick={() => openModal('EST')}> <Icons.Plus size={18}/> Nuevo Establecimiento </button> </div>
+                            </div>
+                        </div>
+                        <div className="table-wrapper">
+                            <table className="data-table" style={{width:'100%', borderCollapse:'separate', borderSpacing:0}}>
+                                <thead>
+                                    <tr>
+                                        <th style={{width:40, background:'#f1f5f9', padding:'0.75rem 1rem', borderBottom:'1px solid var(--border)'}}></th>
+                                        <th style={{background:'#f1f5f9', padding:'0.75rem 1rem', borderBottom:'1px solid var(--border)'}}>Código</th>
+                                        <th style={{background:'#f1f5f9', padding:'0.75rem 1rem', borderBottom:'1px solid var(--border)'}}>Nombre</th>
+                                        <th style={{background:'#f1f5f9', padding:'0.75rem 1rem', borderBottom:'1px solid var(--border)'}}>Ubicación / Hectáreas</th>
+                                        <th style={{background:'#f1f5f9', padding:'0.75rem 1rem', borderBottom:'1px solid var(--border)'}}>Propietario</th>
+                                        <th className="text-center" style={{background:'#f1f5f9', padding:'0.75rem 1rem', borderBottom:'1px solid var(--border)'}}> <div style={{display:'flex', alignItems:'center', justifyContent:'center', gap:4}}> Tablet <TooltipInfo /> </div> </th>
+                                        <th className="text-center" style={{background:'#f1f5f9', padding:'0.75rem 1rem', borderBottom:'1px solid var(--border)'}}>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredData.map(est => (
+                                        <React.Fragment key={est.id}>
+                                            <tr style={{background: '#fff'}}>
+                                                <td className="text-center" style={{cursor:'pointer', borderBottom:'1px solid var(--border)'}} onClick={() => toggleExpand(est.id)}> {est.expanded ? <Icons.ChevronDown size={18} color="var(--primary)"/> : <Icons.ChevronRight size={18} color="var(--text-light)"/>} </td>
+                                                <td style={{fontWeight:600, borderBottom:'1px solid var(--border)'}}> {est.code} {est.agreement && <span title={`Convenio: ${est.agreement}`} style={{display:'inline-block', width:6, height:6, background:'var(--info)', borderRadius:'50%', marginLeft:6, verticalAlign:'top'}}></span>} </td>
+                                                <td style={{fontWeight:600, color:'var(--primary)', borderBottom:'1px solid var(--border)'}}>{est.name}</td>
+                                                <td style={{fontSize:'0.8rem', color:'var(--text-light)', borderBottom:'1px solid var(--border)'}}> {est.city}, {est.province} </td>
+                                                <td style={{borderBottom:'1px solid var(--border)'}}><span className="user-type-badge">{est.owner}</span></td>
+                                                <td className="text-center" style={{borderBottom:'1px solid var(--border)'}}> <div className="tooltip-container" style={{margin:0}}> <label className="toggle-switch"> <input type="checkbox" checked={est.sendToTablet} onChange={() => toggleTablet(est.id)} /> <span className="slider"></span> </label> <span className="tooltip-text"> {est.sendToTablet ? "Activo: Disponible en Tablet" : "Inactivo: No visible en Tablet"} </span> </div> </td>
+                                                <td className="text-center" style={{borderBottom:'1px solid var(--border)'}}> <div style={{display:'flex', justifyContent:'center', gap:4}}> <button className="btn-icon" title="Agregar Lote" onClick={() => openModal('LOT', null, est.id)}><Icons.Plus size={16} color="var(--primary)"/></button> <button className="btn-icon" title="Editar" onClick={() => openModal('EST', est)}><Icons.Edit2 size={16}/></button> <button className="btn-icon" title="Eliminar" onClick={() => handleDelete(est.id)}><Icons.Trash2 size={16} color="var(--danger)"/></button> </div> </td>
+                                            </tr>
+                                            {est.expanded && (
+                                                <>
+                                                    {est.lots.length === 0 && ( <tr> <td colSpan="7" style={{padding:'1rem', textAlign:'center', fontStyle:'italic', color:'var(--text-light)', background:'#f8fafc', borderBottom:'1px dashed var(--border)'}}> No hay lotes cargados para {est.name}. </td> </tr> )}
+                                                    {est.lots.map(lot => (
+                                                        <tr key={lot.id} style={{background: '#f8fafc'}}>
+                                                            <td style={{borderRight:'3px solid var(--primary)', borderBottom:'1px solid var(--border)'}}></td>
+                                                            <td style={{paddingLeft:'1.5rem', fontSize:'0.85rem', color:'var(--text-light)', fontFamily:'monospace', borderBottom:'1px solid var(--border)'}}>└ {lot.code}</td>
+                                                            <td style={{fontSize:'0.85rem', fontWeight:500, borderBottom:'1px solid var(--border)'}}>{lot.name}</td>
+                                                            <td style={{verticalAlign:'middle', cursor: 'text', borderBottom:'1px solid var(--border)'}} onClick={() => startEditing(lot)} title="Click para editar hectáreas"> {editingCell.id === lot.id ? ( <input type="number" autoFocus step="0.01" className="form-input" style={{height: '28px', width: '100px', padding: '0 0.5rem', fontSize:'0.85rem'}} value={editingCell.value} onChange={(e) => setEditingCell({ ...editingCell, value: e.target.value })} onBlur={() => saveEditing(est.id, lot.id)} onKeyDown={(e) => handleKeyDown(e, est.id, lot.id)} onClick={(e) => e.stopPropagation()} /> ) : ( lot.hectares > 0 ? ( <span className="ha-badge" style={{cursor:'pointer', transition:'background 0.2s'}}> <Icons.Layout size={12}/> {lot.hectares} ha <Icons.Edit2 size={10} style={{opacity:0.5, marginLeft:4}}/> </span> ) : ( <span style={{fontSize:'0.75rem', color:'#94a3b8', borderBottom:'1px dashed #cbd5e1', cursor:'pointer'}}> + Agregar Ha </span> ) )} </td>
+                                                            <td style={{borderBottom:'1px solid var(--border)'}}></td>
+                                                            <td className="text-center" style={{borderBottom:'1px solid var(--border)'}}> <div className="tooltip-container" style={{margin:0}}> <label className="toggle-switch" style={{transform:'scale(0.85)'}}> <input type="checkbox" checked={lot.sendToTablet} onChange={() => toggleTablet(est.id, lot.id)} /> <span className="slider"></span> </label> <span className="tooltip-text"> {lot.sendToTablet ? "Lote visible en Tablet" : "Lote oculto en Tablet"} </span> </div> </td>
+                                                            <td className="text-center" style={{borderBottom:'1px solid var(--border)'}}> <div style={{display:'flex', justifyContent:'center', gap:4}}> <button className="btn-icon" onClick={() => openModal('LOT', lot, est.id)}><Icons.Edit2 size={14}/></button> <button className="btn-icon" onClick={() => handleDelete(est.id, lot.id)}><Icons.Trash2 size={14} color="var(--danger)"/></button> </div> </td>
+                                                        </tr>
+                                                    ))}
+                                                    <tr style={{height:10}}></tr>
+                                                </>
+                                            )}
+                                        </React.Fragment>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    {isModalOpen && (
+                        <div className="modal-overlay" style={{opacity:1, pointerEvents:'all'}}>
+                            <div className="modal-card">
+                                <div className="modal-header"> <h3>{currentItem.id ? 'Editar' : 'Nuevo'} {modalMode === 'EST' ? 'Establecimiento' : 'Lote'}</h3> <button className="btn-icon" onClick={() => setIsModalOpen(false)}><Icons.X size={20}/></button> </div>
+                                <div className="modal-body">
+                                    <div className="form-group"> <label className="form-label">Código (Único, máx 12)</label> <input maxLength={12} className="form-input" value={currentItem.code} onChange={e => setCurrentItem({...currentItem, code: e.target.value.toUpperCase()})} placeholder="Ej: EST-001" /> </div>
+                                    <div className="form-group"> <label className="form-label">Nombre (Máx 25)</label> <input maxLength={25} className="form-input" value={currentItem.name} onChange={e => setCurrentItem({...currentItem, name: e.target.value})} placeholder="Nombre descriptivo" /> </div>
+                                    {modalMode === 'EST' ? (
+                                        <>
+                                            <div className="form-group"> <label className="form-label">Propietario</label> <select className="form-select" value={currentItem.owner} onChange={e => setCurrentItem({...currentItem, owner: e.target.value})}> <option value="Propietario Prueba">Propietario Prueba</option> <option value="Juan Pérez">Juan Pérez</option> <option value="Agrícola S.A.">Agrícola S.A.</option> </select> </div>
+                                            <div style={{display:'flex', gap:'1rem'}}> <div className="form-group" style={{flex:1}}> <label className="form-label">País</label> <select className="form-select" value={currentItem.country} disabled><option>Argentina</option></select> </div> <div className="form-group" style={{flex:1}}> <label className="form-label">Provincia</label> <select className="form-select" value={currentItem.province} onChange={e => setCurrentItem({...currentItem, province: e.target.value, city: ''})}> <option value="">Seleccionar...</option> {Object.keys(locationData['Argentina']).map(p => <option key={p} value={p}>{p}</option>)} </select> </div> </div>
+                                            <div className="form-group"> <label className="form-label">Ciudad</label> <select className="form-select" value={currentItem.city} onChange={e => setCurrentItem({...currentItem, city: e.target.value})} disabled={!currentItem.province}> <option value="">Seleccionar...</option> {currentItem.province && locationData['Argentina'][currentItem.province].map(c => ( <option key={c} value={c}>{c}</option> ))} </select> </div>
+                                            <div style={{marginTop: '0.5rem', borderTop:'1px dashed var(--border)', paddingTop:'0.5rem'}}> <button onClick={() => setShowAdvanced(!showAdvanced)} style={{background:'none', border:'none', color:'var(--primary)', fontSize:'0.8rem', cursor:'pointer', display:'flex', alignItems:'center', gap:'0.25rem', padding:0, fontWeight:500}}> {showAdvanced ? <Icons.ChevronDown size={16}/> : <Icons.ChevronRight size={16}/>} Opciones Avanzadas </button> </div>
+                                            {showAdvanced && ( <div className="form-group" style={{marginTop:'0.5rem', animation: 'fadeIn 0.2s'}}> <label className="form-label">Convenio (Opcional)</label> <input className="form-input" value={currentItem.agreement || ''} onChange={e => setCurrentItem({...currentItem, agreement: e.target.value})} placeholder="Código o nombre de convenio" /> <small style={{fontSize:'0.7rem', color:'var(--text-light)'}}> Uso exclusivo para clientes con convenio especial de acopio. </small> </div> )}
+                                        </>
+                                    ) : (
+                                        <div className="form-group"> <label className="form-label">Hectáreas</label> <div style={{position:'relative'}}> <input type="number" step="0.01" className="form-input" style={{paddingLeft: '32px'}} value={currentItem.hectares} onChange={e => setCurrentItem({...currentItem, hectares: e.target.value})} placeholder="0.00" /> <div style={{position:'absolute', left:10, top:10, color:'var(--text-light)'}}> <Icons.Layout size={16}/> </div> </div> </div>
+                                    )}
+                                    <div className="form-group" style={{marginTop:'1rem', background:'#f1f5f9', padding:'1rem', borderRadius:'6px'}}> <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}> <label style={{fontSize:'0.9rem', fontWeight:600}}>Disponible en Tablet</label> <label className="toggle-switch"> <input type="checkbox" checked={currentItem.sendToTablet} onChange={e => setCurrentItem({...currentItem, sendToTablet: e.target.checked})} /> <span className="slider"></span> </label> </div> <p style={{fontSize:'0.75rem', color:'var(--text-light)', marginTop:'0.5rem'}}> Activa esta opción para que este {modalMode === 'EST' ? 'establecimiento' : 'lote'} aparezca disponible para elegir en la aplicación móvil. </p> </div>
+                                </div>
+                                <div className="modal-footer"> <button className="btn btn-outline" onClick={() => setIsModalOpen(false)}>Cancelar</button> <button className="btn btn-primary" onClick={handleSave}>Guardar</button> </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [darkMode, setDarkMode] = useState(false);
+            const [activeTab, setActiveTab] = useState('descargas');
+            const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+            const [user, setUser] = useState({ name: 'Martin', lastname: 'Usuario', email: 'martin@agdp.com', phone: '1122334455' });
+            const [isProfileOpen, setProfileOpen] = useState(false);
+
+            useEffect(() => { document.body.className = darkMode ? 'dark-mode' : ''; }, [darkMode]);
+
+            return (
+                <div className="app-container">
+                    <Header darkMode={darkMode} toggleDarkMode={() => setDarkMode(!darkMode)} toggleSidebar={() => setSidebarCollapsed(false)} user={user} onEditProfile={() => setProfileOpen(true)} />
+                    <div className="main-layout">
+                        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} collapsed={sidebarCollapsed} toggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)} />
+                        <main style={{flex:1, overflow:'hidden', display:'flex', flexDirection:'column'}}>
+                            {activeTab === 'descargas' ? <DownloadsModule /> : 
+                             activeTab === 'tolvas' ? <TolvasModule /> : 
+                             activeTab === 'establecimientos' ? <EstablishmentConfig /> : 
+                             <EmptyModule title={activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} />}
+                        </main>
+                    </div>
+                    <ProfileModal isOpen={isProfileOpen} onClose={() => setProfileOpen(false)} user={user} onSave={(data) => { setUser(data); setProfileOpen(false); }} />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
