@@ -1,0 +1,902 @@
+import React, { useState, useMemo, useEffect } from 'react';
+import { 
+  Settings, 
+  Activity, 
+  Scale, 
+  ChevronRight, 
+  Edit2, 
+  X,
+  History,
+  Calendar,
+  BarChart2,
+  Search,
+  ChevronLeft,
+  Filter,
+  Check,
+  Truck
+} from 'lucide-react';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip as RechartsTooltip, 
+  ResponsiveContainer, 
+  Legend 
+} from 'recharts';
+
+// --- INTEGRACIÓN DE FLATPCKR ---
+// Nota: En un entorno de desarrollo real, estas librerías se importarían via npm/yarn.
+// Para este entorno, las cargamos de forma dinámica.
+
+const loadFlatpickr = (callback) => {
+  if (window.flatpickr) {
+    callback();
+    return;
+  }
+  
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css';
+  document.head.appendChild(link);
+
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/flatpickr';
+  script.onload = () => {
+    // Cargar la localización en español
+    const localeScript = document.createElement('script');
+    localeScript.src = 'https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js';
+    localeScript.onload = callback;
+    document.head.appendChild(localeScript);
+  };
+  document.head.appendChild(script);
+};
+
+// --- UTILIDADES DE FECHA ---
+
+/**
+ * Convierte una cadena DD/MM/AAAA a un objeto Date de forma estricta.
+ * @param {string} ddmmyyyyString - Fecha en formato DD/MM/AAAA.
+ * @returns {Date} Objeto Date.
+ */
+const parseDateStrict = (ddmmyyyyString) => {
+    if (!ddmmyyyyString) return new Date();
+    const parts = ddmmyyyyString.split('/');
+    if (parts.length === 3) {
+        // Formato: Day=parts[0], Month=parts[1], Year=parts[2]
+        // Se resta 1 al mes porque JS usa índices base 0 (0=Enero, 11=Diciembre)
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    return new Date(); // Retorna la fecha actual si el formato es incorrecto
+};
+
+/**
+ * Convierte un objeto Date a formato DD/MM/AAAA.
+ * @param {Date} date - Objeto Date.
+ * @returns {string} Fecha en formato DD/MM/AAAA.
+ */
+const formatDateDDMMYYYY = (date) => {
+    if (!date || isNaN(date)) return 'N/A';
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+};
+
+// --- CONFIGURACIÓN DE MARCAS Y MODELOS ---
+const BRANDS_DATA = {
+  'AKRON': ['16', '22', '28', '30'],
+  'CESTARI': ['16', '22', '28', '30'],
+  'MONTECOR': ['16', '22', '28', '30']
+};
+
+// --- MOCK DATA GENERATOR (20 Tolvas) ---
+const generateMockTolvas = () => {
+  const brands = Object.keys(BRANDS_DATA);
+  // Paleta de colores distintivos
+  const colors = [
+    '#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed', 
+    '#db2777', '#0891b2', '#ea580c', '#65a30d', '#4f46e5',
+    '#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed', 
+    '#db2777', '#0891b2', '#ea580c', '#65a30d', '#4f46e5'
+  ];
+
+  return Array.from({ length: 20 }, (_, i) => {
+    const id = `t${i + 1}`;
+    const code = Math.floor(1000 + Math.random() * 9000).toString();
+    
+    const brand = brands[i % brands.length];
+    const capacities = BRANDS_DATA[brand];
+    const capacity = capacities[i % capacities.length];
+    const model = `${brand}-${capacity}`;
+
+    return {
+      id,
+      code,
+      name: `TOLVA-${i + 1}-${brand}-LOTE-${Math.floor(Math.random()*10)} (IDENTIFICADOR LARGO)`,
+      model,
+      brand, 
+      capacity,
+      linkVersion: i % 3 === 0 ? '5.5' : '5.6',
+      androidVersion: 'Android 11',
+      mode: Math.random() > 0.4 ? 'auto' : 'manual',
+      lastCalibration: '2023-10-15',
+      color: colors[i]
+    };
+  });
+};
+
+const INITIAL_TOLVAS = generateMockTolvas();
+
+// Actualizamos el historial para que use el formato DD/MM/AAAA para simular datos del backend
+const CALIBRATION_HISTORY = [
+  { date: '01/11/2023', sensitivity: 1850, cells: 80000, window: 10 },
+  { date: '15/06/2023', sensitivity: 1845, cells: 80000, window: 8 },
+  { date: '10/01/2023', sensitivity: 1800, cells: 60000, window: 8 },
+];
+
+// Función para obtener la semilla basada en la fecha (simulación de datos diferentes por día)
+const getSeedFromDate = (date) => {
+    // Convierte la fecha a una representación numérica simple (ej: YYYYMMDD)
+    return parseInt(date.toISOString().slice(0, 10).replace(/-/g, ''), 10);
+};
+
+// Generador de números pseudo-aleatorios basado en semilla
+let seed = 1;
+const pseudoRandom = () => {
+    const x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+};
+const resetSeed = (newSeed) => {
+    seed = newSeed;
+};
+
+// --- GENERADOR DE DATOS REALISTAS (Ciclos de carga y descarga) ---
+const generateChartData = (tolvas, date) => {
+  resetSeed(getSeedFromDate(date)); 
+    
+  const data = [];
+  
+  const tolvaState = {};
+  tolvas.forEach(t => {
+    const modelCap = parseInt(t.model.split('-')[1]) * 1000 || 28000; 
+    
+    tolvaState[t.id] = {
+      weight: pseudoRandom() * 5000, 
+      status: pseudoRandom() > 0.5 ? 'loading' : 'idle',
+      cycles: 0,
+      maxCap: modelCap
+    };
+  });
+
+  for (let i = 0; i < 96; i++) {
+    const hour = Math.floor(i / 4);
+    const minute = (i % 4) * 15;
+    const timeLabel = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+    const row = { time: timeLabel };
+
+    tolvas.forEach((t) => {
+      const state = tolvaState[t.id];
+      let change = 0;
+
+      if (state.status === 'loading') {
+        change = 800 + pseudoRandom() * 1200; 
+        if (state.weight + change >= state.maxCap) {
+          state.weight = state.maxCap;
+          state.status = 'unloading'; 
+        } else {
+          state.weight += change;
+          if (pseudoRandom() > 0.9) state.status = 'idle';
+        }
+      } else if (state.status === 'unloading') {
+        change = -(2500 + pseudoRandom() * 2000);
+        if (state.weight + change <= 0) {
+          state.weight = 0;
+          state.status = 'idle'; 
+        } else {
+          state.weight += change;
+        }
+      } else if (state.status === 'idle') {
+        change = (pseudoRandom() - 0.5) * 50; 
+        state.weight += change;
+        if (pseudoRandom() > 0.8) {
+             if(state.weight < 1000) state.status = 'loading';
+             else if (state.weight > state.maxCap * 0.8) state.status = 'unloading';
+             else state.status = pseudoRandom() > 0.4 ? 'loading' : 'unloading';
+        }
+      }
+
+      if (state.weight < 0) state.weight = 0;
+      if (state.weight > state.maxCap * 1.05) state.weight = state.maxCap;
+
+      const isActive = Math.abs(change) > 100 ? 1 : 0;
+      
+      row[`${t.id}_weight`] = Math.round(state.weight);
+      row[`${t.id}_active`] = isActive;
+    });
+    data.push(row);
+  }
+  return data;
+};
+
+// --- COMPONENTS ---
+
+// Componente DatePicker basado en Flatpickr
+const FlatpickrDatePicker = ({ selectedDate, onDateChange }) => {
+    const inputRef = React.useRef(null);
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    useEffect(() => {
+        loadFlatpickr(() => {
+            if (window.flatpickr) {
+                // Inicializar Flatpickr
+                window.flatpickr(inputRef.current, {
+                    dateFormat: "d/m/Y",
+                    locale: "es",
+                    defaultDate: selectedDate,
+                    onChange: (selectedDates) => {
+                        if (selectedDates.length > 0) {
+                            onDateChange(selectedDates[0]);
+                        }
+                    }
+                });
+            }
+            setIsLoaded(true);
+        });
+    }, []);
+
+    // Asegura que Flatpickr se actualice si el estado externo (selectedDate) cambia
+    useEffect(() => {
+        if (isLoaded && inputRef.current && inputRef.current._flatpickr) {
+            inputRef.current._flatpickr.setDate(selectedDate, false);
+        }
+    }, [selectedDate, isLoaded]);
+
+
+    return (
+        <div className="relative flex items-center">
+            <input
+                ref={inputRef}
+                type="text"
+                className="pl-8 pr-3 py-1 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out cursor-pointer bg-white"
+            />
+            <Calendar className="absolute left-2 w-4 h-4 text-slate-500 pointer-events-none" />
+        </div>
+    );
+};
+
+
+const InlineEdit = ({ value, onSave, placeholder }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempValue, setTempValue] = useState(value);
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      onSave(tempValue);
+      setIsEditing(false);
+    } else if (e.key === 'Escape') {
+      setTempValue(value);
+      setIsEditing(false);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center space-x-2 w-full">
+        <input
+          autoFocus
+          type="text"
+          value={tempValue}
+          onChange={(e) => setTempValue(e.target.value)}
+          onBlur={() => { onSave(tempValue); setIsEditing(false); }}
+          onKeyDown={handleKeyDown}
+          className="w-full px-2 py-1 text-sm border border-blue-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-200"
+          placeholder={placeholder}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      onClick={() => setIsEditing(true)} 
+      className="group flex items-center cursor-pointer hover:bg-gray-50 px-2 py-1 -ml-2 rounded transition-colors duration-150 w-full"
+      title="Click para editar"
+    >
+      <span className="text-gray-900 font-medium truncate">{value}</span>
+      <Edit2 className="w-3 h-3 ml-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+    </div>
+  );
+};
+
+const ModelSelector = ({ currentValue, onSave }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  
+  const parseModel = (val) => {
+    if (!val) return { brand: 'AKRON', cap: '28' };
+    const parts = val.split('-');
+    if (parts.length >= 2) {
+      const cap = parts.pop();
+      const brand = parts.join('-');
+      return { brand, cap };
+    }
+    return { brand: 'AKRON', cap: '28' };
+  };
+
+  const [selection, setSelection] = useState(parseModel(currentValue));
+
+  const handleSave = () => {
+    const finalModel = `${selection.brand}-${selection.cap}`;
+    onSave(finalModel);
+    setIsEditing(false);
+  };
+
+  const handleBrandChange = (e) => {
+    const newBrand = e.target.value;
+    const firstCap = BRANDS_DATA[newBrand][0];
+    setSelection({ brand: newBrand, cap: firstCap });
+  };
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center space-x-1 bg-white p-1 rounded shadow-lg border border-blue-200 z-10 absolute">
+        <select 
+          value={selection.brand}
+          onChange={handleBrandChange}
+          className="text-xs border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 py-1"
+        >
+          {Object.keys(BRANDS_DATA).map(b => (
+            <option key={b} value={b}>{b}</option>
+          ))}
+        </select>
+        <span className="text-gray-400">-</span>
+        <select 
+          value={selection.cap}
+          onChange={(e) => setSelection({ ...selection, cap: e.target.value })}
+          className="text-xs border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500 py-1"
+        >
+          {BRANDS_DATA[selection.brand]?.map(c => (
+            <option key={c} value={c}>{c} TN</option>
+          ))}
+        </select>
+        <button onClick={handleSave} className="bg-blue-600 text-white p-1 rounded hover:bg-blue-700">
+          <Check className="w-3 h-3" />
+        </button>
+        <button onClick={() => setIsEditing(false)} className="text-gray-500 p-1 hover:text-gray-700">
+          <X className="w-3 h-3" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      onClick={() => setIsEditing(true)} 
+      className="group flex items-center cursor-pointer hover:bg-gray-50 px-2 py-1 -ml-2 rounded transition-colors duration-150 relative"
+    >
+      <div className="flex flex-col">
+        <span className="text-gray-900 font-bold text-sm">{currentValue}</span>
+        <span className="text-[10px] text-gray-400 font-medium">Click para cambiar</span>
+      </div>
+      <Edit2 className="w-3 h-3 ml-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+    </div>
+  );
+};
+
+const CalibrationModal = ({ isOpen, onClose, tolva }) => {
+  if (!isOpen || !tolva) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-bold text-slate-800">Historial de Calibración</h3>
+            <p className="text-sm text-slate-500">Equipo: {tolva.name} ({tolva.model})</p>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+              <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Sensibilidad Actual</span>
+              <div className="text-2xl font-bold text-blue-900 mt-1">1850</div>
+              <div className="text-xs text-blue-500 mt-1">Rango: 1200 - 2040</div>
+            </div>
+            <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
+              <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Celdas</span>
+              <div className="text-2xl font-bold text-indigo-900 mt-1">80,000</div>
+              <div className="text-xs text-indigo-500 mt-1">Kg Capacidad</div>
+            </div>
+            <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
+              <span className="text-xs font-semibold text-purple-600 uppercase tracking-wide">Ventana Móvil</span>
+              <div className="text-2xl font-bold text-purple-900 mt-1">10</div>
+              <div className="text-xs text-purple-500 mt-1">Muestras</div>
+            </div>
+          </div>
+
+          <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+            <History className="w-4 h-4 mr-2" /> Historial de Cambios
+          </h4>
+          <div className="overflow-hidden border border-gray-200 rounded-lg max-h-48 overflow-y-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50 sticky top-0">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sensibilidad</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Celdas</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">V. Móvil</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {CALIBRATION_HISTORY.map((cal, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50">
+                    <td className="px-4 py-2 text-sm text-gray-900 flex items-center">
+                      <Calendar className="w-3 h-3 mr-2 text-gray-400" />
+                      {/* Muestra la fecha en formato DD/MM/AAAA */}
+                      {cal.date} 
+                    </td>
+                    <td className="px-4 py-2 text-sm text-gray-600">{cal.sensitivity}</td>
+                    <td className="px-4 py-2 text-sm text-gray-600">{cal.cells}</td>
+                    <td className="px-4 py-2 text-sm text-gray-600">{cal.window}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="bg-gray-50 px-6 py-4 flex justify-end">
+          <button onClick={onClose} className="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const OperationTimeline = ({ data, color, label }) => {
+  return (
+    <div className="flex items-center mb-4">
+      <div className="w-32 pr-4 text-right overflow-hidden">
+        <span className="text-sm font-semibold text-gray-700 block truncate" title={label}>{label}</span>
+        <span className="text-xs text-gray-400">Actividad</span>
+      </div>
+      <div className="flex-1 h-8 bg-gray-100 rounded overflow-hidden flex relative">
+        {[0, 6, 12, 18, 24].map(h => (
+           <div key={h} className="absolute h-full border-l border-gray-200 text-[10px] text-gray-400 pl-1 z-10" style={{ left: `${(h/24)*100}%` }}>
+             {h > 0 && h < 24 ? `${h}h` : ''}
+           </div>
+        ))}
+        
+        {data.map((point, index) => {
+          const isActive = point.active === 1;
+          const widthPercent = 100 / 96; 
+          
+          if (!isActive) return <div key={index} style={{ width: `${widthPercent}%` }} />;
+
+          return (
+            <div 
+              key={index} 
+              className="h-full transition-all hover:brightness-110 cursor-help"
+              style={{ 
+                width: `${widthPercent}%`, 
+                backgroundColor: color,
+                opacity: 0.8
+              }}
+              title={`Operativo: ${point.time}`}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// --- MAIN APP COMPONENT ---
+
+export default function App() {
+  const [tolvas, setTolvas] = useState(INITIAL_TOLVAS);
+  const [selectedIds, setSelectedIds] = useState(['t1', 't2']); 
+  const [previousSelection, setPreviousSelection] = useState(null);
+  const [calibrationModalOpen, setCalibrationModalOpen] = useState(false);
+  const [selectedForCalibration, setSelectedForCalibration] = useState(null);
+  // Inicializamos con la fecha actual, pero la almacenamos como un objeto Date
+  const [selectedDate, setSelectedDate] = useState(new Date()); 
+
+  // Genera los datos de los gráficos de forma dinámica cuando cambia la fecha o las tolvas
+  const chartData = useMemo(() => {
+    return generateChartData(tolvas, selectedDate);
+  }, [tolvas, selectedDate]);
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6; 
+
+  const handleUpdate = (id, field, value) => {
+    setTolvas(prev => prev.map(t => t.id === id ? { ...t, [field]: value } : t));
+  };
+
+  const handleModeToggle = (id) => {
+    setTolvas(prev => prev.map(t => {
+      if (t.id === id) {
+        const newMode = t.mode === 'auto' ? 'manual' : 'auto';
+        console.log(`Notificación enviada a tolva ${t.code}: Cambio a modo ${newMode}`);
+        return { ...t, mode: newMode };
+      }
+      return t;
+    }));
+  };
+
+  const toggleSelection = (id) => {
+    setSelectedIds(prev => {
+      if (previousSelection) setPreviousSelection(null);
+      if (prev.includes(id)) {
+        return prev.filter(x => x !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  };
+
+  const handleLegendClick = (e) => {
+    const clickedId = e.dataKey.replace('_weight', ''); 
+    if (previousSelection) {
+      if (selectedIds.length === 1 && selectedIds[0] === clickedId) {
+        setSelectedIds(previousSelection);
+        setPreviousSelection(null);
+      } else {
+        setSelectedIds([clickedId]);
+      }
+    } else {
+      setPreviousSelection(selectedIds);
+      setSelectedIds([clickedId]);
+    }
+  };
+
+  const filteredTolvas = useMemo(() => {
+    return tolvas.filter(t => 
+      t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.code.includes(searchTerm)
+    );
+  }, [tolvas, searchTerm]);
+
+  const totalPages = Math.ceil(filteredTolvas.length / itemsPerPage);
+  const paginatedTolvas = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredTolvas.slice(start, start + itemsPerPage);
+  }, [filteredTolvas, currentPage]);
+
+  const openCalibration = (tolva) => {
+    setSelectedForCalibration(tolva);
+    setCalibrationModalOpen(true);
+  };
+
+  const activeTolvas = useMemo(() => tolvas.filter(t => selectedIds.includes(t.id)), [tolvas, selectedIds]);
+
+  // Función para determinar si la fecha es "Hoy"
+  const isToday = (date) => {
+    const today = new Date();
+    // Normalizar a medianoche para la comparación
+    const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const normalizedToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    return normalizedDate.getTime() === normalizedToday.getTime();
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-100 p-4 md:p-8 font-sans text-slate-800">
+      
+      {/* Header */}
+      <div className="max-w-7xl mx-auto mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div className="flex items-center text-sm text-slate-500 mb-2">
+            <span>Configuración</span>
+            <ChevronRight className="w-4 h-4 mx-1" />
+            <span className="font-semibold text-slate-800">Tolvas</span>
+          </div>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Gestión de Equipos</h1>
+          <p className="text-slate-500 mt-1">Administra la flota de {tolvas.length} monotolvas registradas.</p>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto space-y-6">
+        
+        {/* PANEL DE CONTROL */}
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          
+          <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center bg-slate-50 gap-4">
+            <div className="relative w-full sm:w-72">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-slate-400" />
+              </div>
+              <input
+                type="text"
+                className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md leading-5 bg-white placeholder-slate-400 focus:outline-none focus:placeholder-slate-500 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+                placeholder="Buscar por nombre, modelo o código..."
+                value={searchTerm}
+                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-slate-500 mr-2">
+                {filteredTolvas.length === 0 ? '0' : (currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredTolvas.length)} de {filteredTolvas.length}
+              </span>
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-1 rounded hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-5 h-5 text-slate-600" />
+              </button>
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="p-1 rounded hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="w-5 h-5 text-slate-600" />
+              </button>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th scope="col" className="w-12 px-6 py-4">
+                    <span className="sr-only">Select</span>
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Cód. Balanza</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Nombre Identificador</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Modelo</th>
+                  <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Versiones</th>
+                  <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Modo Operación</th>
+                  <th scope="col" className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Calibración</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-200">
+                {paginatedTolvas.length > 0 ? paginatedTolvas.map((tolva) => (
+                  <tr key={tolva.id} className={`hover:bg-slate-50 transition-colors ${selectedIds.includes(tolva.id) ? 'bg-blue-50/30' : ''}`}>
+                    
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center justify-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(tolva.id)}
+                          onChange={() => toggleSelection(tolva.id)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                        />
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm font-mono font-bold text-slate-700 tracking-wide">{tolva.code}</span>
+                    </td>
+
+                    <td className="px-6 py-4 min-w-[250px] max-w-[350px]">
+                      <InlineEdit 
+                        value={tolva.name} 
+                        onSave={(val) => handleUpdate(tolva.id, 'name', val)}
+                        placeholder="Nombre..."
+                      />
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap min-w-[180px]">
+                       <ModelSelector 
+                        currentValue={tolva.model}
+                        onSave={(val) => handleUpdate(tolva.id, 'model', val)}
+                       />
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <div className="flex flex-col space-y-1 items-center">
+                        <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                          v{tolva.linkVersion}
+                        </span>
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <div className="flex items-center justify-center group relative">
+                        <button
+                          onClick={() => handleModeToggle(tolva.id)}
+                          className={`
+                            relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent 
+                            transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                            ${tolva.mode === 'auto' ? 'bg-green-500' : 'bg-gray-300'}
+                          `}
+                        >
+                          <span
+                            aria-hidden="true"
+                            className={`
+                              pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 
+                              transition duration-200 ease-in-out
+                              ${tolva.mode === 'auto' ? 'translate-x-5' : 'translate-x-0'}
+                            `}
+                          />
+                        </button>
+                        <span className="ml-2 text-xs font-medium text-gray-500 w-16 text-left uppercase tracking-wide">
+                          {tolva.mode === 'auto' ? 'Auto' : 'Man'}
+                        </span>
+                        
+                        <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg z-10">
+                          {tolva.mode === 'auto' 
+                            ? 'Sensor Activo: Detecta carga automáticamente.' 
+                            : 'Modo Manual: Requiere intervención del operario.'}
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <button 
+                        onClick={() => openCalibration(tolva)}
+                        className="text-slate-500 hover:text-blue-600 hover:bg-blue-50 p-2 rounded-lg transition-colors border border-transparent hover:border-blue-100"
+                        title="Ver Historial de Calibración"
+                      >
+                        <Scale className="w-4 h-4" />
+                      </button>
+                    </td>
+
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-12 text-center text-slate-400">
+                      No se encontraron resultados para "{searchTerm}"
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* SECCIÓN GRÁFICOS */}
+        {activeTolvas.length > 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-4 duration-500">
+            
+            {/* Gráfico 1: Horarios de Operación */}
+            <div className="lg:col-span-3 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+              <div className="flex items-center justify-between mb-6">
+                 <h2 className="text-lg font-bold text-slate-800 flex items-center">
+                   <Activity className="w-5 h-5 mr-2 text-blue-600" />
+                   Actividad Diaria (Comparativa)
+                 </h2>
+                 <div className="flex items-center gap-4">
+                   <span className="text-xs text-slate-500">
+                     Viendo {activeTolvas.length} equipos
+                   </span>
+                   {/* Selector de Fecha con Flatpickr */}
+                   <FlatpickrDatePicker 
+                       selectedDate={selectedDate} 
+                       onDateChange={setSelectedDate} 
+                   />
+                   <div className={`text-xs text-slate-400 border px-2 py-1 rounded bg-slate-50 ${isToday(selectedDate) ? 'text-green-600 border-green-200 bg-green-50' : ''}`}>
+                       {isToday(selectedDate) ? 'HOY' : 'Histórico'}
+                   </div>
+                 </div>
+              </div>
+              
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                {activeTolvas.map(t => {
+                   const timelineData = chartData.map(d => ({
+                     time: d.time,
+                     active: d[`${t.id}_active`]
+                   }));
+                   
+                   return (
+                     <OperationTimeline 
+                        key={t.id}
+                        label={t.name}
+                        color={t.color}
+                        data={timelineData}
+                     />
+                   );
+                })}
+              </div>
+              <div className="flex justify-center mt-4 space-x-6 text-xs text-slate-500 border-t border-slate-100 pt-4">
+                <span className="flex items-center"><div className="w-3 h-3 bg-gray-100 border border-gray-200 mr-1"></div> Inactivo</span>
+                <span className="flex items-center"><div className="w-3 h-3 bg-gray-400 opacity-50 mr-1"></div> En Operación</span>
+              </div>
+            </div>
+
+            {/* Gráfico 2: Peso (Recharts) */}
+            <div className="lg:col-span-3 bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-slate-800 flex items-center">
+                  <BarChart2 className="w-5 h-5 mr-2 text-indigo-600" />
+                  Evolución de Carga (Kg)
+                </h2>
+                {previousSelection && (
+                  <button 
+                    onClick={() => { setSelectedIds(previousSelection); setPreviousSelection(null); }}
+                    className="text-xs bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-100 hover:bg-indigo-100 transition-colors"
+                  >
+                    Restaurar Vista Grupal
+                  </button>
+                )}
+              </div>
+              
+              <div className="h-[400px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis 
+                      dataKey="time" 
+                      stroke="#94a3b8" 
+                      fontSize={12} 
+                      tickMargin={10}
+                      interval={8} 
+                    />
+                    <YAxis 
+                      stroke="#94a3b8" 
+                      fontSize={12} 
+                      unit=" kg"
+                      width={60}
+                      domain={[0, 'auto']} 
+                      allowDataOverflow={false}
+                    />
+                    <RechartsTooltip 
+                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      itemStyle={{ fontSize: '12px' }}
+                      formatter={(value) => [`${value} kg`, 'Peso']}
+                    />
+                    <Legend 
+                      iconType="circle" 
+                      wrapperStyle={{ paddingTop: '20px', cursor: 'pointer' }}
+                      onClick={handleLegendClick}
+                      onMouseEnter={(e) => document.body.style.cursor = 'pointer'}
+                      onMouseLeave={(e) => document.body.style.cursor = 'default'}
+                      formatter={(value, entry) => (
+                        <span className="text-slate-600 hover:text-slate-900 font-medium transition-colors" title="Click para aislar">
+                          {value}
+                        </span>
+                      )}
+                    />
+                    
+                    {activeTolvas.map((t) => (
+                      <Line
+                        key={t.id}
+                        type="monotone"
+                        dataKey={`${t.id}_weight`}
+                        name={t.name}
+                        stroke={t.color}
+                        strokeWidth={2}
+                        dot={false}
+                        activeDot={{ r: 6 }}
+                        connectNulls
+                        animationDuration={1000}
+                      />
+                    ))}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <p className="text-xs text-center text-slate-400 mt-2 italic">
+                Tip: Haz clic en el nombre de una tolva en la leyenda para aislarla.
+              </p>
+            </div>
+
+          </div>
+        ) : (
+          <div className="text-center py-16 bg-white rounded-xl border border-dashed border-slate-300 text-slate-400">
+            <BarChart2 className="w-16 h-16 mx-auto mb-4 opacity-20 text-slate-600" />
+            <p className="text-lg font-medium text-slate-600">Sin datos para mostrar</p>
+            <p className="text-sm mt-2">Selecciona al menos una tolva en la lista superior utilizando el recuadro a la izquierda.</p>
+          </div>
+        )}
+      </div>
+
+      <CalibrationModal 
+        isOpen={calibrationModalOpen} 
+        onClose={() => setCalibrationModalOpen(false)}
+        tolva={selectedForCalibration}
+      />
+
+    </div>
+  );
+}
