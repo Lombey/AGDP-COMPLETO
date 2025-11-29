@@ -5,37 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AGDP Dashboard </title>
     
-    <!-- 1. REACT CORE -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- 2. LIBRERIAS EXTERNAS -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- Flatpickr -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
     
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- Google Maps -->
-    <!-- Nota: Reemplaza YOUR_API_KEY con tu clave real si esta demo expira -->
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBixHiS7Z6kVhh0tN7g9NdZaKrFxSji140" async defer></script>
     
-    <!-- PDF Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
-    <!-- Excel Export (SheetJS) -->
     <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
 
-    <!-- 3. FUENTES -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- 4. ESTILOS CSS -->
     <style>
         :root {
             --primary: #204B42; 
@@ -299,6 +289,7 @@
         .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
         .form-label { font-size: 0.8rem; font-weight: 600; color: var(--text-light); }
         .loading-overlay { position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(255,255,255,0.85); z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 1rem; backdrop-filter: blur(3px); }
+        body.dark-mode .loading-overlay { background: rgba(15, 23, 42, 0.85); }
         .spinner { width: 48px; height: 48px; border: 5px solid var(--border); border-bottom-color: var(--primary); border-radius: 50%; animation: rotation 1s linear infinite; }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
@@ -349,7 +340,10 @@
             FileText: (p) => <IconWrapper {...p}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></IconWrapper>,
             FileCsv: (p) => <IconWrapper {...p}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 12H8"/><path d="M12 16H8"/><path d="M16 12H14"/><path d="M16 16H14"/></IconWrapper>,
             Maximize: (p) => <IconWrapper {...p}><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></IconWrapper>,
-            Minimize: (p) => <IconWrapper {...p}><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M16 3v3a2 2 0 0 0 2 2h3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/><path d="M8 21v-3a2 2 0 0 0-2-2H3"/></IconWrapper>
+            Minimize: (p) => <IconWrapper {...p}><path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M16 3v3a2 2 0 0 0 2 2h3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/><path d="M8 21v-3a2 2 0 0 0-2-2H3"/></IconWrapper>,
+            MapPin: (p) => <IconWrapper {...p}><path d="M12 18s-4-4.9-4-8c0-4.4 3.6-8 8-8s8 3.6 8 8c0 3.1-4 8-4 8l-4 4-4-4Z"/><circle cx="12" cy="10" r="3"/></IconWrapper>,
+            Truck: (p) => <IconWrapper {...p}><path d="M5 20a2 2 0 1 0 4 0 2 2 0 1 0-4 0"/><path d="M17 20a2 2 0 1 0 4 0 2 2 0 1 0-4 0"/><path d="M17 18h2V9h-6V6H7v3H2l2-4h4"/><path d="M10 4 8 2H5"/></IconWrapper>,
+            Cylinder: (p) => <IconWrapper {...p}><path d="M12 2v20"/><path d="M17 5v14c0 1.1-2.2 2-5 2s-5-.9-5-2V5c0-1.1 2.2-2 5-2s5 .9 5 2Z"/><path d="M7 5c0-1.1 2.2-2 5-2s5 .9 5 2"/><path d="M7 19c0-1.1 2.2-2 5-2s5 .9 5 2"/></IconWrapper>
         };
 
         const EmptyModule = ({ title }) => (
@@ -466,7 +460,7 @@
             const [importUrl, setImportUrl] = useState(URL_MANIAGRO);
             const [showImportModal, setShowImportModal] = useState(false);
             const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-            const [isTableFullscreen, setIsTableFullscreen] = useState(false); // Nuevo estado para Fullscreen
+            const [isTableFullscreen, setIsTableFullscreen] = useState(false); 
             const chartEstRef = useRef(null), chartProdRef = useRef(null), mapRef = useRef(null), mapInstance = useRef(null), chartInstances = useRef({}), dateFromRef = useRef(null), dateToRef = useRef(null), fpFromInstance = useRef(null), fpToInstance = useRef(null);
             
             useEffect(() => { loadData(importUrl); }, [importUrl]);
@@ -478,7 +472,57 @@
             const filteredData = useMemo(() => { return data.filter(r => { if (hideLow && r.PESO_NUM < 100) return false; if (filters.dateFrom && r.DATE_OBJ) { const d = new Date(r.DATE_OBJ); d.setHours(0,0,0,0); const f = new Date(filters.dateFrom); f.setHours(0,0,0,0); if (d < f) return false; } if (filters.dateTo && r.DATE_OBJ) { const d = new Date(r.DATE_OBJ); d.setHours(0,0,0,0); const f = new Date(filters.dateTo); f.setHours(23,59,59,999); if (d > f) return false; } if (filters.est.length && !filters.est.includes(r['ESTABLECIMIENTO'])) return false; if (filters.lote.length && !filters.lote.includes(r['LOTE'])) return false; if (filters.prod.length && !filters.prod.includes(r['PRODUCTO'])) return false; if (filters.productor.length && !filters.productor.includes(r['PRODUCTOR'])) return false; if (filters.tolva.length && !filters.tolva.includes(r['TOLVA'])) return false; if (filters.contratista.length && !filters.contratista.includes(r['CONTRATISTA'])) return false; if (filters.search && !r['DESTINO DESCARGA'].toLowerCase().includes(filters.search.toLowerCase())) return false; const dest = (r['DESTINO DESCARGA'] || '').toUpperCase(); const isSilo = dest.includes('BOLSA') || dest.includes('SILO') || /^\d{2}-[A-Z]/.test(dest); if (filterDestType === 'SILO' && !isSilo) return false; if (filterDestType === 'TRUCK' && isSilo) return false; return true; }); }, [data, filters, hideLow, filterDestType]);
             const displayData = useMemo(() => { let result = []; if (groupByKeys.length === 0) { result = [...filteredData]; } else { const groups = {}; filteredData.forEach(r => { const key = groupByKeys.map(k => r[k] || '-').join('|'); if (!groups[key]) { groups[key] = { isGroup: true, count: 0, PESO_NUM: 0, items: [], ...Object.fromEntries(groupByKeys.map(k => [k, r[k]])) }; } groups[key].PESO_NUM += r.PESO_NUM; groups[key].count++; groups[key].items.push(r); }); result = Object.values(groups); } if (sortConfig.key) { result.sort((a,b) => { let valA = a[sortConfig.key], valB = b[sortConfig.key]; if (sortConfig.key.includes('FECHA')) { valA = a.DATE_OBJ?a.DATE_OBJ.getTime():0; valB = b.DATE_OBJ?b.DATE_OBJ.getTime():0; } else if(typeof valA==='string'){ valA=valA.toLowerCase(); valB=valB?valB.toLowerCase():''; } if (valA < valB) return sortConfig.direction==='asc'?-1:1; if (valA > valB) return sortConfig.direction==='asc'?1:-1; return 0; }); } return result; }, [filteredData, groupByKeys, sortConfig]);
             const getAggregatedData = (data, key) => { const map = {}; data.forEach(r => { const k = r[key] || 'Sin Datos'; map[k] = (map[k] || 0) + r.PESO_NUM; }); return Object.entries(map).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value); };
-            useEffect(() => { if (!window.Chart || loading) return; const renderChart = (ref, type, dataArray, label) => { if (chartInstances.current[ref.id]) chartInstances.current[ref.id].destroy(); const topData = dataArray.slice(0, 15); const labels = topData.map(d => d.label); const values = topData.map(d => displayUnit === 'TON' ? d.value/1000 : d.value); chartInstances.current[ref.id] = new Chart(ref, { type: type, data: { labels, datasets: [{ label, data: values, backgroundColor: CHART_COLORS, borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: type === 'doughnut', position: 'right' } } } }); }; const estData = getAggregatedData(filteredData, 'ESTABLECIMIENTO'); const prodData = getAggregatedData(filteredData, 'PRODUCTO'); if (chartEstRef.current) renderChart(chartEstRef.current, 'bar', estData, 'Totales'); if (chartProdRef.current) renderChart(chartProdRef.current, 'doughnut', prodData, 'Totales'); }, [filteredData, displayUnit, loading]);
+
+            // 3. KPI Establecimientos (Gráfico) y Gráfico de Cultivos: Asegurar que los colores de los ejes sean visibles
+            useEffect(() => { 
+                if (!window.Chart || loading) return; 
+                
+                const getAxisColor = () => {
+                    return getComputedStyle(document.body).getPropertyValue('--text-light').trim();
+                };
+
+                const renderChart = (ref, type, dataArray, label) => { 
+                    if (chartInstances.current[ref.id]) chartInstances.current[ref.id].destroy(); 
+                    const topData = dataArray.slice(0, 15); 
+                    const labels = topData.map(d => d.label); 
+                    const values = topData.map(d => displayUnit === 'TON' ? d.value/1000 : d.value); 
+                    
+                    chartInstances.current[ref.id] = new Chart(ref, { 
+                        type: type, 
+                        data: { 
+                            labels, 
+                            datasets: [{ 
+                                label, 
+                                data: values, 
+                                backgroundColor: CHART_COLORS, 
+                                borderWidth: 1 
+                            }] 
+                        }, 
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            scales: {
+                                x: { ticks: { color: getAxisColor() }, grid: { display: type !== 'bar' } }, 
+                                y: { ticks: { color: getAxisColor() } }  
+                            },
+                            plugins: { 
+                                legend: { 
+                                    display: type === 'doughnut', 
+                                    position: 'right',
+                                    labels: { color: getAxisColor() } 
+                                } 
+                            } 
+                        } 
+                    }); 
+                }; 
+                
+                const estData = getAggregatedData(filteredData, 'ESTABLECIMIENTO'); 
+                const prodData = getAggregatedData(filteredData, 'PRODUCTO'); 
+                
+                if (chartEstRef.current) renderChart(chartEstRef.current, 'bar', estData, 'Totales'); 
+                if (chartProdRef.current) renderChart(chartProdRef.current, 'doughnut', prodData, 'Totales'); 
+            }, [filteredData, displayUnit, loading]);
+
             const toggleQuickGroup = () => { if (isQuickGroup) { setGroupByKeys([]); setIsQuickGroup(false); } else { setGroupByKeys(['FECHA PESADA', 'ESTABLECIMIENTO', 'LOTE', 'PRODUCTO', 'DESTINO DESCARGA', 'CONTRATISTA']); setIsQuickGroup(true); } };
             const toggleGroupKey = (key) => { setGroupByKeys(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]); };
             const kpis = useMemo(() => { let truckC = 0, truckW = 0, siloC = 0, siloW = 0; filteredData.forEach(r => { const dest = (r['DESTINO DESCARGA'] || '').toUpperCase(); const isSilo = dest.includes('BOLSA') || dest.includes('SILO') || /^\d{2}-[A-Z]/.test(dest); if (isSilo) { siloC++; siloW += r.PESO_NUM; } else { truckC++; truckW += r.PESO_NUM; } }); return { truckC, truckW, siloC, siloW }; }, [filteredData]);
@@ -487,46 +531,61 @@
             const handleFilterChange = (key, val, checked) => { setFilters(prev => { const current = prev[key]; const next = checked ? [...current, val] : current.filter(item => item !== val); return { ...prev, [key]: next }; }); };
             const handleSort = (key) => { setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' })); };
             
-            // --- FIX 2: MAP INITIALIZATION LOGIC ---
+            // 1. Cuestiones del Mapa: Inicialización y Vista Satélite
             useEffect(() => {
-                if (showMap && mapRef.current && !mapInstance.current && window.google) {
-                    // Inicializar mapa
-                    const map = new google.maps.Map(mapRef.current, {
-                        center: { lat: -33.1, lng: -64.3 }, // Centro aproximado en Córdoba/Río Cuarto
-                        zoom: 9,
-                        styles: [
-                            {featureType:"all",elementType:"geometry",stylers:[{color:"#f5f5f5"}]},
-                            {featureType:"road",elementType:"geometry",stylers:[{color:"#ffffff"}]},
-                            {featureType:"water",elementType:"geometry",stylers:[{color:"#c9c9c9"}]},
-                            {featureType:"water",elementType:"labels.text.fill",stylers:[{color:"#9e9e9e"}]}
-                        ]
-                    });
+                if (showMap && mapRef.current && window.google) {
+                    if (!mapInstance.current) {
+                        // 1. Inicialización (solo la primera vez)
+                        mapInstance.current = new google.maps.Map(mapRef.current, {
+                            center: { lat: -33.1, lng: -64.3 }, 
+                            zoom: 9,
+                            mapTypeId: 'satellite', // <--- CORRECCIÓN 2: Vista Satélite por defecto
+                            styles: [
+                                {featureType:"all",elementType:"geometry",stylers:[{color:"#f5f5f5"}]},
+                                {featureType:"road",elementType:"geometry",stylers:[{color:"#ffffff"}]},
+                                {featureType:"water",elementType:"geometry",stylers:[{color:"#c9c9c9"}]},
+                                {featureType:"water",elementType:"labels.text.fill",stylers:[{color:"#9e9e9e"}]}
+                            ]
+                        });
+                        mapInstance.current.markers = []; // Inicializar array de marcadores
+                    }
                     
-                    mapInstance.current = map;
+                    const map = mapInstance.current;
+                    
+                    // Limpiar marcadores anteriores
+                    if (map.markers) {
+                        map.markers.forEach(m => m.setMap(null));
+                    }
+                    map.markers = []; 
 
-                    // Agregar marcadores basados en filteredData que tengan lat/lng
+                    // Agregar nuevos marcadores
                     const bounds = new google.maps.LatLngBounds();
                     let markerCount = 0;
 
                     filteredData.forEach(item => {
                         if (item.LAT_NUM && item.LNG_NUM && item.LAT_NUM !== 0 && item.LNG_NUM !== 0) {
                             const position = { lat: item.LAT_NUM, lng: item.LNG_NUM };
-                            new google.maps.Marker({
+                            const marker = new google.maps.Marker({
                                 position: position,
                                 map: map,
                                 title: `Tolva: ${item.TOLVA} - ${item.PESO_NUM}kg`
                             });
+                            map.markers.push(marker);
                             bounds.extend(position);
                             markerCount++;
                         }
                     });
 
-                    // Ajustar zoom si hay marcadores
+                    // Ajustar zoom y forzar actualización (CORRECCIÓN 1: Solución "Mapa en Blanco")
+                    google.maps.event.trigger(map, 'resize');
                     if (markerCount > 0) {
                         map.fitBounds(bounds);
+                    } else {
+                         map.setCenter({ lat: -33.1, lng: -64.3 });
+                         map.setZoom(9);
                     }
                 }
-            }, [showMap, filteredData]); // Re-ejecutar si se abre el mapa o cambian los datos filtrados
+            }, [showMap, filteredData]); 
 
 
             // --- FUNCIONES DE EXPORTACIÓN ---
@@ -578,205 +637,140 @@
                 XLSX.writeFile(wb, "descargas_agdp.xlsx");
             };
             
-            // --- FIX 1: UPDATED PDF EXPORT LOGIC ---
-            // Reemplazar la función exportToPDF con esta versión que maneja la agrupación de la grilla
+            // 2. Exportador PDF: Exportar la vista Agrupada si groupByKeys.length > 0, sino, por Establecimiento
+            const exportToPDF = () => {
+                const { jsPDF } = window.jspdf;
+                if (!jsPDF) { console.error("jsPDF library not loaded."); return; }
 
-const exportToPDF = () => {
-    const { jsPDF } = window.jspdf;
-    if (!jsPDF) { console.error("jsPDF library not loaded."); return; }
-    const visibleColsKey = Object.keys(colConfig).filter(key => {
-        const conf = colConfig[key];
-        if (key === 'ACTIONS' || key === 'UBICACION' || key === 'STATUS' || key === 'VALIDACION') return false;
-        if (!conf.visible) return false;
-        if (groupByKeys.length > 0) {
-            // En modo agrupado, solo mostramos las dimensiones agrupadas, el peso y una columna de conteo.
-            const isMetric = ['PESO_NUM'].includes(key); 
-            const isDimension = conf.dimensionKey && groupByKeys.includes(conf.dimensionKey);
-            if (!isMetric && !isDimension) return false;
-        }
-        return true;
-    });
+                // 1. Determinar columnas visibles
+                const visibleColsKey = Object.keys(colConfig).filter(key => {
+                    const conf = colConfig[key];
+                    if (key === 'ACTIONS' || key === 'UBICACION' || key === 'STATUS' || key === 'VALIDACION') return false;
+                    if (!conf.visible) return false;
+                    if (groupByKeys.length > 0) {
+                        const isMetric = ['PESO_NUM'].includes(key); 
+                        const isDimension = conf.dimensionKey && groupByKeys.includes(conf.dimensionKey);
+                        if (!isMetric && !isDimension) return false;
+                    }
+                    return true;
+                });
+                
+                let headers;
+                let dataToExport;
 
-    const headers = groupByKeys.length > 0 ? ['# Regs', ...visibleColsKey.map(key => colConfig[key].label)] : visibleColsKey.map(key => colConfig[key].label);
-    
-    const doc = new jsPDF({ orientation: 'landscape', format: 'a4' });
-    
-    doc.setFontSize(14);
-    doc.setTextColor('#204B42');
-    doc.text(`Reporte de Descargas (${groupByKeys.length > 0 ? 'Agrupado' : 'Detallado'})`, 14, 20);
-    doc.setFontSize(10);
-    doc.setTextColor('#64748b');
-    doc.text(`Fecha del Reporte: ${new Date().toLocaleDateString('es-AR')}`, 14, 25);
-    doc.text(`Total Registros (Filtrados): ${filteredData.length}`, 14, 30);
-    if (groupByKeys.length > 0) {
-        doc.text(`Agrupado por: ${groupByKeys.join(', ')}`, 14, 35);
-    }
-    doc.setTextColor('#0f172a'); 
-    
-    let body = [];
+                if (groupByKeys.length > 0) {
+                    // MODO AGRUPADO (Exporta la vista agrupada de la grilla)
+                    headers = ['# Regs', ...visibleColsKey.map(key => colConfig[key].label)];
+                    dataToExport = displayData.map(r => {
+                        const row = visibleColsKey.map(key => {
+                            let val = r[key];
+                            if (key === 'PESO_NUM') val = formatWeight(val);
+                            else if (r.isGroup && colConfig[key].dimensionKey && !groupByKeys.includes(colConfig[key].dimensionKey)) val = '-';
+                            return val || '';
+                        });
+                        row.unshift(r.count);
 
-    if (groupByKeys.length > 0) {
-        // MODO AGRUPADO (Usa la data ya agrupada en displayData)
-        displayData.forEach(r => {
-            const row = visibleColsKey.map(key => {
-                let val = r[key];
-                if (key === 'PESO_NUM') val = formatWeight(val);
-                // Si es un grupo, la dimensión no agrupada se rellena con '-'
-                else if (r.isGroup && colConfig[key].dimensionKey && !groupByKeys.includes(colConfig[key].dimensionKey)) val = '-';
-                return val || '';
-            });
-            // Añadir el conteo al inicio de la fila
-            row.unshift(r.count);
+                        const isGroupRow = r.isGroup;
+                        return { 
+                            content: row, 
+                            styles: isGroupRow 
+                                ? { fontStyle: 'bold', fillColor: [240, 253, 244], textColor: [22, 101, 52] }
+                                : {}
+                        };
+                    });
+                } else {
+                    // MODO DETALLE (El reporte original: Agrupado por ESTABLECIMIENTO)
+                    headers = visibleColsKey.map(key => colConfig[key].label);
+                    
+                    // Ordenamos data plana (filteredData) por Establecimiento -> Fecha
+                    const dataSorted = [...filteredData].sort((a, b) => {
+                        if (a['ESTABLECIMIENTO'] < b['ESTABLECIMIENTO']) return -1;
+                        if (a['ESTABLECIMIENTO'] > b['ESTABLECIMIENTO']) return 1;
+                        if (a['FECHA PESADA'] < b['FECHA PESADA']) return -1;
+                        if (a['FECHA PESADA'] > b['FECHA PESADA']) return 1;
+                        return 0;
+                    });
 
-            const isGroupRow = r.isGroup;
-            body.push({ 
-                content: row, 
-                styles: isGroupRow 
-                    ? { fontStyle: 'bold', fillColor: [240, 253, 244], textColor: [22, 101, 52] }
-                    : {}
-            });
-        });
-    } else {
-        // MODO DETALLE (Usa la data filtrada)
-        body = filteredData.map(r => visibleColsKey.map(key => {
-            let val = r[key];
-            if (key === 'PESO_NUM') val = formatWeight(val);
-            return val || '';
-        }));
-    }
+                    let currentEst = null;
+                    let subtotalEst = 0;
+                    dataToExport = [];
 
-    // Generar Tabla
-    doc.autoTable({
-        head: [headers],
-        body: body.map(item => item.content || item),
-        startY: groupByKeys.length > 0 ? 40 : 35, // Desplazar si se muestra la info de agrupación
-        styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
-        headStyles: { fillColor: [32, 75, 66], textColor: 255, fontStyle: 'bold' },
-        columnStyles: {
-            [visibleColsKey.indexOf('PESO_NUM')]: { halign: 'right' }
-        },
-        // Esto se deja por si el usuario tiene agrupado, para que la fila del grupo sea visible
-        didParseCell: (data) => {
-            if (groupByKeys.length > 0 && data.section === 'body') {
-                const rowRaw = body[data.row.index];
-                if (rowRaw && rowRaw.styles) {
-                    data.cell.styles.fontStyle = rowRaw.styles.fontStyle;
-                    data.cell.styles.fillColor = rowRaw.styles.fillColor;
-                    data.cell.styles.textColor = rowRaw.styles.textColor;
+                    dataSorted.forEach(r => {
+                        if (currentEst !== r['ESTABLECIMIENTO']) {
+                            if (currentEst !== null) {
+                                const subRow = Array(headers.length).fill('');
+                                subRow[0] = `Total ${currentEst}:`;
+                                const pesoIdx = visibleColsKey.indexOf('PESO_NUM');
+                                if (pesoIdx > -1) subRow[pesoIdx] = formatWeight(subtotalEst);
+                                
+                                dataToExport.push({ content: subRow, styles: { fontStyle: 'bold', fillColor: [240, 253, 244], textColor: [22, 101, 52] } });
+                                dataToExport.push(Array(headers.length).fill('')); 
+                            }
+
+                            currentEst = r['ESTABLECIMIENTO'];
+                            subtotalEst = 0;
+
+                            const headerRow = Array(headers.length).fill('');
+                            headerRow[0] = `ESTABLECIMIENTO: ${currentEst || 'Sin Asignar'}`;
+                            dataToExport.push({ 
+                                content: headerRow, 
+                                styles: { fontStyle: 'bold', fillColor: [226, 232, 240], textColor: [32, 75, 66] }
+                            });
+                        }
+
+                        const row = visibleColsKey.map(key => {
+                            let val = r[key];
+                            if (key === 'PESO_NUM') val = formatWeight(val);
+                            return val || '';
+                        });
+                        dataToExport.push(row);
+                        subtotalEst += r.PESO_NUM;
+                    });
+
+                    if (currentEst !== null) {
+                        const subRow = Array(headers.length).fill('');
+                        subRow[0] = `Total ${currentEst}:`;
+                        const pesoIdx = visibleColsKey.indexOf('PESO_NUM');
+                        if (pesoIdx > -1) subRow[pesoIdx] = formatWeight(subtotalEst);
+                        dataToExport.push({ content: subRow, styles: { fontStyle: 'bold', fillColor: [240, 253, 244], textColor: [22, 101, 52] } });
+                    }
                 }
-            }
-        }
-    });
-
-    doc.save('reporte_descargas_agdp.pdf');
-};
-
-                // Headers
-                const headers = visibleColsKey.map(key => colConfig[key].label);
                 
-                const doc = new jsPDF({ orientation: 'landscape', format: 'a4' });
-                
-                // Configuración del Reporte
+                const reportTitle = groupByKeys.length > 0 ? "Reporte de Descargas Agrupadas" : "Reporte de Descargas por Establecimiento";
+
                 doc.setFontSize(14);
                 doc.setTextColor('#204B42');
-                doc.text("Reporte de Descargas por Establecimiento", 14, 20);
+                doc.text(reportTitle, 14, 20);
                 doc.setFontSize(10);
                 doc.setTextColor('#64748b');
                 doc.text(`Fecha del Reporte: ${new Date().toLocaleDateString('es-AR')}`, 14, 25);
                 doc.text(`Total Registros: ${filteredData.length}`, 14, 30);
+                if (groupByKeys.length > 0) {
+                     doc.text(`Agrupado por: ${groupByKeys.map(k => GROUP_DIMS.find(d => d.key === k)?.label || k).join(', ')}`, 14, 35);
+                }
                 doc.setTextColor('#0f172a'); 
                 
-                // --- Preparación de Datos: Reporte Agrupado por Establecimiento ---
-                // Independientemente de si la grilla está agrupada o no, el PDF se ordena por ESTABLECIMIENTO
-                // para cumplir el requisito: "Primero: NOMBRE DEL ESTABLECIMIENTO... Luego un listado".
-                
-                // Ordenamos data plana (filteredData) por Establecimiento -> Fecha
-                const dataSorted = [...filteredData].sort((a, b) => {
-                    if (a['ESTABLECIMIENTO'] < b['ESTABLECIMIENTO']) return -1;
-                    if (a['ESTABLECIMIENTO'] > b['ESTABLECIMIENTO']) return 1;
-                    // Secundario por fecha
-                    if (a['FECHA PESADA'] < b['FECHA PESADA']) return -1;
-                    if (a['FECHA PESADA'] > b['FECHA PESADA']) return 1;
-                    return 0;
-                });
-
-                const body = [];
-                let currentEst = null;
-                let subtotalEst = 0;
-                
-                dataSorted.forEach(r => {
-                    // CORTE DE CONTROL: Cambio de Establecimiento
-                    if (currentEst !== r['ESTABLECIMIENTO']) {
-                        // Imprimir Subtotal del anterior (si existe)
-                        if (currentEst !== null) {
-                            const subRow = Array(headers.length).fill('');
-                            subRow[0] = `Total ${currentEst}:`;
-                            // Encontrar índice de peso para poner el valor
-                            const pesoIdx = visibleColsKey.indexOf('PESO_NUM');
-                            if (pesoIdx > -1) subRow[pesoIdx] = formatWeight(subtotalEst);
-                            
-                            body.push({ content: subRow, styles: { fontStyle: 'bold', fillColor: [240, 253, 244], textColor: [22, 101, 52] } });
-                            // Fila vacía separadora
-                            body.push(Array(headers.length).fill('')); 
-                        }
-
-                        // Actualizar punteros
-                        currentEst = r['ESTABLECIMIENTO'];
-                        subtotalEst = 0;
-
-                        // HEADER DE GRUPO: Nombre del Establecimiento
-                        // Creamos una fila especial que ocupe todo el ancho o se vea destacada
-                        const headerRow = Array(headers.length).fill('');
-                        headerRow[0] = `ESTABLECIMIENTO: ${currentEst || 'Sin Asignar'}`;
-                        body.push({ 
-                            content: headerRow, 
-                            colSpan: headers.length, // Intento de span, aunque autotable array no lo soporta nativo directo asi en simple array, usamos didParseCell abajo
-                            styles: { fontStyle: 'bold', fillColor: [226, 232, 240], textColor: [32, 75, 66] }
-                        });
-                    }
-
-                    // Fila de Datos
-                    const row = visibleColsKey.map(key => {
-                        let val = r[key];
-                        if (key === 'PESO_NUM') val = formatWeight(val);
-                        return val || '';
-                    });
-                    body.push(row);
-
-                    // Acumular
-                    subtotalEst += r.PESO_NUM;
-                });
-
-                // Imprimir Subtotal del último grupo
-                if (currentEst !== null) {
-                    const subRow = Array(headers.length).fill('');
-                    subRow[0] = `Total ${currentEst}:`;
-                    const pesoIdx = visibleColsKey.indexOf('PESO_NUM');
-                    if (pesoIdx > -1) subRow[pesoIdx] = formatWeight(subtotalEst);
-                    body.push({ content: subRow, styles: { fontStyle: 'bold', fillColor: [240, 253, 244], textColor: [22, 101, 52] } });
-                }
 
                 // Generar Tabla
                 doc.autoTable({
                     head: [headers],
-                    body: body.map(item => item.content || item), // Manejar objetos de estilo o arrays simples
-                    startY: 35,
+                    body: dataToExport.map(item => item.content || item), 
+                    startY: groupByKeys.length > 0 ? 40 : 35, 
                     styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
                     headStyles: { fillColor: [32, 75, 66], textColor: 255, fontStyle: 'bold' },
                     columnStyles: {
-                        [visibleColsKey.indexOf('PESO_NUM')]: { halign: 'right' }
+                        // El índice de PESO_NUM cambia si la columna #Regs está al inicio
+                        [visibleColsKey.indexOf('PESO_NUM') + (groupByKeys.length > 0 ? 1 : 0)]: { halign: 'right' }
                     },
-                    // Aplicar estilos custom definidos en el loop
                     didParseCell: (data) => {
-                        const rowRaw = body[data.row.index];
+                        const rowRaw = dataToExport[data.row.index];
                         if (rowRaw && rowRaw.styles) {
                             data.cell.styles.fontStyle = rowRaw.styles.fontStyle;
                             data.cell.styles.fillColor = rowRaw.styles.fillColor;
                             data.cell.styles.textColor = rowRaw.styles.textColor;
                         }
-                        // Span para el Header de Establecimiento (si el texto empieza con ESTABLECIMIENTO:)
-                        // Esto es un truco visual para que el titulo ocupe la fila
-                        if (data.section === 'body' && data.row.raw[0] && typeof data.row.raw[0] === 'string' && data.row.raw[0].startsWith('ESTABLECIMIENTO:')) {
+                        // Solo aplicar span para el reporte por Establecimiento (cuando no hay agrupación de grilla)
+                        if (groupByKeys.length === 0 && data.section === 'body' && data.row.raw[0] && typeof data.row.raw[0] === 'string' && data.row.raw[0].startsWith('ESTABLECIMIENTO:')) {
                              if (data.column.index === 0) {
                                  data.cell.colSpan = headers.length;
                              }
@@ -784,7 +778,7 @@ const exportToPDF = () => {
                     }
                 });
 
-                doc.save('reporte_establecimientos_agdp.pdf');
+                doc.save('reporte_descargas_agdp.pdf');
             };
             
             const CustomSelect = ({ label, options, selected, onChange }) => { const [isOpen, setIsOpen] = useState(false); const [search, setSearch] = useState(''); const filteredOpts = options.filter(o => o.toLowerCase().includes(search.toLowerCase())); return ( <div className="custom-select-wrapper"> <div className="custom-select-trigger" onClick={() => setIsOpen(!isOpen)}> <span>{label} {selected.length > 0 && `(${selected.length})`}</span> <i className="ph ph-caret-down"></i> </div> {isOpen && ( <div className="custom-options open"> <input type="text" className="dropdown-search" placeholder="Buscar..." onClick={e=>e.stopPropagation()} onChange={e=>setSearch(e.target.value)} /> {filteredOpts.map(opt => ( <div key={opt} className="option-item" onClick={(e) => { e.stopPropagation(); onChange(opt, !selected.includes(opt)); }}> <input type="checkbox" checked={selected.includes(opt)} readOnly /> {opt} </div> ))} </div> )} {isOpen && <div style={{position:'fixed', inset:0, zIndex:40}} onClick={() => setIsOpen(false)}></div>} </div> ); };
@@ -795,9 +789,9 @@ const exportToPDF = () => {
                     {loading && <div className="loading-overlay"><div className="spinner"></div><div className="loading-text">Procesando...</div></div>}
                     <div className="dashboard-content">
                         <section className="kpi-container">
-                            <div className="kpi-card" title="Total de camiones descargados"> <div className="kpi-label"><i className="ph ph-truck"></i> Camiones</div> <div className="kpi-value">{kpis.truckC}</div> <div style={{fontSize:'0.75rem', color:'var(--text-light)'}}>Viajes</div> </div>
+                            <div className="kpi-card" title="Total de camiones descargados"> <div className="kpi-label"><Icons.Truck size={14}/> Camiones</div> <div className="kpi-value">{kpis.truckC}</div> <div style={{fontSize:'0.75rem', color:'var(--text-light)'}}>Viajes</div> </div>
                             <div className="kpi-card clickable-unit" title="Clic para cambiar unidad (Kg/Ton)" onClick={() => setDisplayUnit(prev => prev==='TON'?'KG':'TON')}> <div className="kpi-header-row"> <div className="kpi-label">Camiones</div> <div className="unit-toggle-pill">{displayUnit} <i className="ph ph-arrows-left-right"></i></div> </div> <div className="kpi-value">{formatWeight(kpis.truckW).replace(' t','').replace(' kg','')}</div> <div style={{fontSize:'0.75rem', color:'var(--text-light)'}}>Húmedo</div> </div>
-                            <div className="kpi-card" title="Total de cargas a silo bolsa"> <div className="kpi-label"><i className="ph ph-cylinder" style={{transform: 'rotate(90deg)'}}></i> Silos</div> <div className="kpi-value">{kpis.siloC}</div> <div style={{fontSize:'0.75rem', color:'var(--text-light)'}}>Cargas</div> </div>
+                            <div className="kpi-card" title="Total de cargas a silo bolsa"> <div className="kpi-label"><Icons.Cylinder size={14} style={{transform: 'rotate(90deg)'}}/> Silos</div> <div className="kpi-value">{kpis.siloC}</div> <div style={{fontSize:'0.75rem', color:'var(--text-light)'}}>Cargas</div> </div>
                             <div className="kpi-card clickable-unit" title="Clic para cambiar unidad (Kg/Ton)" onClick={() => setDisplayUnit(prev => prev==='TON'?'KG':'TON')}> <div className="kpi-header-row"> <div className="kpi-label">Silos</div> <div className="unit-toggle-pill">{displayUnit} <i className="ph ph-arrows-left-right"></i></div> </div> <div className="kpi-value">{formatWeight(kpis.siloW).replace(' t','').replace(' kg','')}</div> <div style={{fontSize:'0.75rem', color:'var(--text-light)'}}>Húmedo</div> </div>
                         </section>
                         <section className="controls-container">
@@ -807,7 +801,7 @@ const exportToPDF = () => {
                                 <button className="btn-std btn-outline" title="Ver descargas de hoy" onClick={() => { const today = new Date(); if(fpFromInstance.current) fpFromInstance.current.setDate(today); if(fpToInstance.current) fpToInstance.current.setDate(today); setFilters(f => ({...f, dateFrom: today, dateTo: today})); }}>Hoy</button>
                                 <CustomSelect label="Productor" options={getUniqueOptions('PRODUCTOR')} selected={filters.productor} onChange={(val, c) => handleFilterChange('productor', val, c)} /> <CustomSelect label="Establecimiento" options={getUniqueOptions('ESTABLECIMIENTO')} selected={filters.est} onChange={(val, c) => handleFilterChange('est', val, c)} /> <CustomSelect label="Lote" options={getUniqueOptions('LOTE')} selected={filters.lote} onChange={(val, c) => handleFilterChange('lote', val, c)} /> <CustomSelect label="Contratista" options={getUniqueOptions('CONTRATISTA')} selected={filters.contratista} onChange={(val, c) => handleFilterChange('contratista', val, c)} /> <CustomSelect label="Tolva" options={getUniqueOptions('TOLVA')} selected={filters.tolva} onChange={(val, c) => handleFilterChange('tolva', val, c)} /> <CustomSelect label="Producto" options={getUniqueOptions('PRODUCTO')} selected={filters.prod} onChange={(val, c) => handleFilterChange('prod', val, c)} />
                                 <div className="search-input-wrapper"> <i className="ph ph-magnifying-glass search-icon"></i> <input type="text" className="search-input" placeholder="Buscar Destino..." onChange={e => setFilters({...filters, search: e.target.value})} /> </div>
-                                <div className="btn-group"> <button className={`btn-group-item ${filterDestType==='ALL'?'active':''}`} onClick={() => setFilterDestType('ALL')} title="Ver Todo">Todos</button> <button className={`btn-group-item ${filterDestType==='TRUCK'?'active':''}`} onClick={() => setFilterDestType('TRUCK')} title="Solo Camiones"><i className="ph ph-truck"></i></button> <button className={`btn-group-item ${filterDestType==='SILO'?'active':''}`} onClick={() => setFilterDestType('SILO')} title="Solo Silos"><i className="ph ph-cylinder" style={{transform:'rotate(90deg)'}}></i></button> </div>
+                                <div className="btn-group"> <button className={`btn-group-item ${filterDestType==='ALL'?'active':''}`} onClick={() => setFilterDestType('ALL')} title="Ver Todo">Todos</button> <button className={`btn-group-item ${filterDestType==='TRUCK'?'active':''}`} onClick={() => setFilterDestType('TRUCK')} title="Solo Camiones"><Icons.Truck size={14}/></button> <button className={`btn-group-item ${filterDestType==='SILO'?'active':''}`} onClick={() => setFilterDestType('SILO')} title="Solo Silos"><Icons.Cylinder size={14} style={{transform:'rotate(90deg)'}}/></button> </div>
                                 <label className="toggle-filter" title="Excluir descargas menores a 100kg"> <input type="checkbox" checked={hideLow} onChange={e => setHideLow(e.target.checked)} /> Ocultar &lt; 100kg </label>
                             </div>
                             <div className="filters-row" style={{justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: '0.75rem'}}>
@@ -820,11 +814,11 @@ const exportToPDF = () => {
                                 <div style={{display:'flex', gap:'0.5rem'}}> 
                                     <button className="btn-square btn-outline" onClick={() => setShowImportModal(true)} title="Importar Datos"><i className="ph ph-cloud-arrow-down"></i></button>
                                     <button className="btn-square btn-outline" onClick={exportToExcel} title="Exportar a Excel (.xlsx)"><Icons.FileCsv size={18} color="var(--text-main)"/></button>
-                                    <button className="btn-square btn-outline" onClick={exportToPDF} title="Exportar Reporte PDF (Agrupado por Establecimiento)"><Icons.FileText size={18} color="var(--text-main)"/></button>
+                                    <button className="btn-square btn-outline" onClick={exportToPDF} title={`Exportar Reporte PDF (${groupByKeys.length > 0 ? 'Agrupado' : 'Por Establecimiento'})`}><Icons.FileText size={18} color="var(--text-main)"/></button>
                                     <button className="btn-square btn-outline" onClick={() => setIsTableFullscreen(!isTableFullscreen)} title={isTableFullscreen ? "Salir de pantalla completa" : "Ver tabla en pantalla completa"}>
                                         {isTableFullscreen ? <Icons.Minimize size={18}/> : <Icons.Maximize size={18}/>}
                                     </button>
-                                    <button className="btn-std btn-primary" onClick={() => setShowMap(true)} title="Ver mapa con todas las descargas"><i className="ph ph-map-trifold"></i> Ver Mapa Global</button> 
+                                    <button className="btn-std btn-primary" onClick={() => setShowMap(true)} title="Ver mapa con todas las descargas"><Icons.MapPin size={18}/> Ver Mapa Global</button> 
                                     <ColConfigDropdown /> 
                                 </div>
                             </div>
@@ -874,7 +868,7 @@ const exportToPDF = () => {
                                                     } else if (key === 'ACTIONS') { 
                                                         content = !row.isGroup ? <button className="btn-icon" title="Editar"><i className="ph ph-pencil-simple"></i></button> : null; 
                                                     } else if (key === 'UBICACION') { 
-                                                        content = (row.LAT_NUM || row.isGroup) ? <div className="map-trigger" onClick={() => setShowMap(true)} title="Ver en mapa"><i className="ph ph-map-pin"></i></div> : null; 
+                                                        content = (row.LAT_NUM || row.isGroup) ? <div className="map-trigger" onClick={() => setShowMap(true)} title="Ver en mapa"><Icons.MapPin size={18}/></div> : null; 
                                                     } else if (key === 'PESO_NUM') { 
                                                         content = <b>{formatWeight(row.PESO_NUM).replace(' t','').replace(' kg','')}</b>; 
                                                     } else { 
@@ -898,8 +892,8 @@ const exportToPDF = () => {
                             </section>
                         )}
                     </div>
-                    {showMap && ( <div className="modal-overlay" style={{opacity:1, pointerEvents:'all'}}> <div className="modal-card modal-lg"> <div className="modal-header"><h3>Mapa Global</h3><button className="btn-square btn-outline" onClick={()=>setShowMap(false)}><i className="ph ph-x"></i></button></div> <div style={{flex:1}} ref={mapRef}></div> </div> </div> )}
-                    {showImportModal && ( <div className="modal-overlay" style={{opacity:1, pointerEvents:'all'}}> <div className="modal-card"> <div className="modal-header"><h3>Importar Datos</h3><button className="btn-square btn-outline" onClick={()=>setShowImportModal(false)}><i className="ph ph-x"></i></button></div> <div className="modal-body"> <input type="text" className="search-input" value={importUrl} onChange={e=>setImportUrl(e.target.value)} /> <div className="btn-group"> <button className="btn-group-item active">Maniagro</button> <button className="btn-group-item">AGD</button> </div> </div> <div className="modal-footer"><button className="btn-std btn-primary" onClick={()=>setShowImportModal(false)}>Cargar</button></div> </div> </div> )}
+                    {showMap && ( <div className="modal-overlay" style={{opacity:1, pointerEvents:'all'}}> <div className="modal-card modal-lg"> <div className="modal-header"><h3>Mapa Global</h3><button className="btn-square btn-outline" onClick={()=>setShowMap(false)}><Icons.X size={18}/></button></div> <div style={{flex:1}} ref={mapRef}></div> </div> </div> )}
+                    {showImportModal && ( <div className="modal-overlay" style={{opacity:1, pointerEvents:'all'}}> <div className="modal-card"> <div className="modal-header"><h3>Importar Datos</h3><button className="btn-square btn-outline" onClick={()=>setShowImportModal(false)}><Icons.X size={18}/></button></div> <div className="modal-body"> <input type="text" className="search-input" value={importUrl} onChange={e=>setImportUrl(e.target.value)} /> <div className="btn-group"> <button className="btn-group-item active">Maniagro</button> <button className="btn-group-item">AGD</button> </div> </div> <div className="modal-footer"><button className="btn-std btn-primary" onClick={()=>setShowImportModal(false)}>Cargar</button></div> </div> </div> )}
                 </div>
             );
         };
@@ -1149,15 +1143,22 @@ const exportToPDF = () => {
                     hidden: previousSelection && !selectedIds.includes(t.id) 
                 }));
 
+                const getAxisColor = () => {
+                    return getComputedStyle(document.body).getPropertyValue('--text-light').trim();
+                };
+
                 weightChartInstance.current = new Chart(weightChartRef.current, {
                     type: 'line',
                     data: { labels: chartData.map(d => d.time), datasets },
                     options: {
                         responsive: true, maintainAspectRatio: false,
-                        scales: { x: { ticks: { maxTicksLimit: 12, color: '#94a3b8' }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#e2e8f0' } } },
+                        scales: { 
+                            x: { ticks: { maxTicksLimit: 12, color: getAxisColor() }, grid: { display: false } }, 
+                            y: { beginAtZero: true, ticks: { color: getAxisColor() }, grid: { color: getComputedStyle(document.body).getPropertyValue('--border').trim() } } 
+                        },
                         plugins: { 
                             legend: { 
-                                labels: { color: '#475569' },
+                                labels: { color: getAxisColor() },
                                 onClick: (e, item) => {
                                     const tId = active[item.datasetIndex].id;
                                     if (previousSelection) { setSelectedIds(previousSelection); setPreviousSelection(null); } 
