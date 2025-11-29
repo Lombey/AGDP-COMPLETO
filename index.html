@@ -13,7 +13,7 @@
     <!-- 2. LIBRERIAS EXTERNAS -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     
-    <!-- Flatpickr (Calendario) -->
+    <!-- Flatpickr -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
@@ -48,7 +48,7 @@
             --header-height: 64px;
             --sidebar-width: 180px;
             
-            /* Module Specifics */
+            /* Common Module Styles */
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
@@ -81,7 +81,7 @@
             --group-active-text: #6ee7b7;
         }
 
-        /* Flatpickr Dark Mode Overrides */
+        /* Flatpickr Overrides */
         body.dark-mode .flatpickr-calendar { background: var(--surface); box-shadow: var(--shadow-lg); border: 1px solid var(--border); }
         body.dark-mode .flatpickr-day { color: var(--text-main); }
         body.dark-mode .flatpickr-day.selected { background: var(--primary); border-color: var(--primary); }
@@ -92,7 +92,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); height: 100vh; overflow: hidden; }
 
-        /* HEADER & LAYOUT */
+        /* Header & Layout */
         header { background-color: #204B42; height: var(--header-height); padding: 0 1.5rem; display: flex; justify-content: space-between; align-items: center; color: white; flex-shrink: 0; z-index: 50; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .brand { display: flex; align-items: center; gap: 1rem; }
         .brand h1 { font-size: 1.1rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
@@ -108,7 +108,7 @@
         .app-container { display: flex; flex-direction: column; height: 100vh; }
         .main-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
 
-        /* SIDEBAR */
+        /* Sidebar */
         .sidebar { width: var(--sidebar-width); background-color: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding-top: 1rem; transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 40; flex-shrink: 0; }
         .sidebar.collapsed { margin-left: calc(var(--sidebar-width) * -1); }
         .sidebar-item { display: flex; gap: 0.8rem; padding: 0.8rem 1.25rem; color: var(--text-light); cursor: pointer; font-size: 0.9rem; align-items: center; text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s; font-weight: 500; }
@@ -116,7 +116,7 @@
         .sidebar-item.active { color: var(--primary); background: rgba(32, 75, 66, 0.08); border-left-color: var(--primary); }
         .sidebar-footer { margin-top: auto; padding: 1rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
 
-        /* COMMON MODULE STYLES */
+        /* Common Module */
         .module-container { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
         .dashboard-content { padding: 1rem; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; height: 100%; }
         
@@ -204,7 +204,7 @@
         .legend-color { width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; flex-shrink: 0; }
         .custom-legend { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; overflow-y: auto; max-height: 80px; }
 
-        /* Specific for Establishment & Tolvas Module */
+        /* Tolvas Specific */
         .ha-badge { font-size: 0.75rem; color: var(--text-light); background: var(--bg-body); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 4px; }
         .toggle-switch { position: relative; width: 36px; height: 20px; display: inline-block; vertical-align: middle; }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
@@ -212,11 +212,11 @@
         .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--success); }
         input:checked + .slider:before { transform: translateX(16px); }
-        .tooltip-container { position: relative; display: inline-flex; align-items: center; margin-left: 6px; cursor: help; }
-        .tooltip-text { visibility: hidden; width: 220px; background-color: #334155; color: #fff; text-align: center; border-radius: 6px; padding: 8px; position: absolute; z-index: 100; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 0.75rem; font-weight: 400; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); pointer-events: none; line-height: 1.4; }
-        .tooltip-text::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #334155 transparent transparent transparent; }
-        .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
         
+        .global-tooltip { position: fixed; z-index: 9999; max-width: 220px; background-color: #334155; color: white; font-size: 0.75rem; border-radius: 6px; padding: 8px; pointer-events: none; transform: translate(-50%, -100%); margin-top: -8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); opacity: 0; transition: opacity 0.1s ease; font-weight: 400; line-height: 1.4; text-align: center; }
+        .global-tooltip.visible { opacity: 1; }
+        .global-tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #334155 transparent transparent transparent; }
+
         .timeline-row { display: flex; align-items: center; margin-bottom: 1rem; }
         .timeline-label { width: 120px; padding-right: 1rem; text-align: right; font-size: 0.85rem; font-weight: 600; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .timeline-track { flex: 1; height: 32px; background: var(--bg-body); border-radius: 4px; position: relative; overflow: hidden; display: flex; border: 1px solid var(--border); }
@@ -224,6 +224,7 @@
         .timeline-segment { height: 100%; transition: opacity 0.2s; }
         .timeline-segment:hover { opacity: 0.8; }
         .charts-grid-tolva { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 1024px) { .charts-grid-tolva { grid-template-columns: 1fr; } }
 
         /* Modals & Overlays */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); opacity: 0; animation: fadeIn 0.2s forwards; }
@@ -255,10 +256,10 @@
 <body>
     <div id="root"></div>
 
-    <!-- 5. LÓGICA REACT -->
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
         
+        // --- COMPONENTS: ICONS & COMMON ---
         const IconWrapper = ({ children, size=24, color="currentColor", ...props }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{children}</svg>
         );
@@ -283,10 +284,10 @@
             Layout: (p) => <IconWrapper {...p}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="21" y2="9"/></IconWrapper>,
             Activity: (p) => <IconWrapper {...p}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></IconWrapper>,
             BarChart: (p) => <IconWrapper {...p}><line x1="12" x2="12" y1="20" y2="10"/><line x1="18" x2="18" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="16"/></IconWrapper>,
-            Settings: (p) => <IconWrapper {...p}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></IconWrapper>
+            Settings: (p) => <IconWrapper {...p}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></IconWrapper>,
+            Check: (p) => <IconWrapper {...p}><polyline points="20 6 9 17 4 12"/></IconWrapper>
         };
 
-        // --- COMPONENTE: EMPTY MODULE ---
         const EmptyModule = ({ title }) => (
             <div className="module-content">
                 <div className="empty-state-icon"><Icons.CloudDownload size={64} /></div>
@@ -295,7 +296,6 @@
             </div>
         );
 
-        // --- COMPONENTE: PROFILE MODAL ---
         const ProfileModal = ({ isOpen, onClose, user, onSave }) => {
             if (!isOpen) return null;
             const [formData, setFormData] = useState({ ...user });
@@ -322,7 +322,6 @@
             );
         };
 
-        // --- COMPONENTE: HEADER ---
         const Header = ({ darkMode, toggleDarkMode, toggleSidebar, user, onEditProfile }) => {
             const [showNotif, setShowNotif] = useState(false);
             const alerts = [
@@ -361,7 +360,6 @@
             );
         };
 
-        // --- COMPONENTE: SIDEBAR ---
         const Sidebar = ({ activeTab, setActiveTab, collapsed, toggleCollapse }) => {
             const items = [
                 { id: 'descargas', label: 'Descargas' },
@@ -384,335 +382,12 @@
             );
         };
 
-        // --- HELPER: GENERACIÓN DE DATOS TOLVAS ---
-        let seed = 1;
-        const pseudoRandom = () => { const x = Math.sin(seed++) * 10000; return x - Math.floor(x); };
-        const resetSeed = (newSeed) => { seed = newSeed; };
-        const getSeedFromDate = (date) => parseInt(date.toISOString().slice(0, 10).replace(/-/g, ''), 10);
-
-        const BRANDS_DATA = { 'AKRON': ['16', '22', '28', '30'], 'CESTARI': ['16', '22', '28', '30'], 'MONTECOR': ['16', '22', '28', '30'] };
-        const TOLVA_COLORS = ['#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed', '#db2777', '#0891b2', '#ea580c', '#65a30d', '#4f46e5'];
-
-        // --- COMPONENTE: TOLVAS MODULE ---
-        const TolvasModule = () => {
-            const [tolvas, setTolvas] = useState([]);
-            const [selectedIds, setSelectedIds] = useState([]);
-            const [searchTerm, setSearchTerm] = useState('');
-            const [currentPage, setCurrentPage] = useState(1);
-            const [selectedDate, setSelectedDate] = useState(new Date());
-            const [chartData, setChartData] = useState([]);
-            const [calibrationModalOpen, setCalibrationModalOpen] = useState(false);
-            const [currentTolva, setCurrentTolva] = useState(null);
-            const [editingCell, setEditingCell] = useState(null);
-            const [activeModelSelector, setActiveModelSelector] = useState(null);
-
-            const datePickerRef = useRef(null);
-            const weightChartRef = useRef(null);
-            const weightChartInstance = useRef(null);
-            const fpInstance = useRef(null);
-
-            const itemsPerPage = 6;
-
-            // Init Data
-            useEffect(() => {
-                const brands = Object.keys(BRANDS_DATA);
-                const mockTolvas = Array.from({ length: 20 }, (_, i) => ({
-                    id: `t${i + 1}`,
-                    code: Math.floor(1000 + Math.random() * 9000).toString(),
-                    name: `TOLVA-${i + 1}-${brands[i % brands.length]}-LOTE-${Math.floor(Math.random()*10)}`,
-                    model: `${brands[i % brands.length]}-${BRANDS_DATA[brands[i % brands.length]][0]}`,
-                    linkVersion: i % 3 === 0 ? '5.5' : '5.6',
-                    mode: Math.random() > 0.4 ? 'auto' : 'manual',
-                    color: TOLVA_COLORS[i % TOLVA_COLORS.length]
-                }));
-                setTolvas(mockTolvas);
-                setSelectedIds([mockTolvas[0].id, mockTolvas[1].id]);
-            }, []);
-
-            // Init Flatpickr
-            useEffect(() => {
-                if(datePickerRef.current) {
-                    fpInstance.current = flatpickr(datePickerRef.current, {
-                        dateFormat: "d/m/Y",
-                        defaultDate: new Date(),
-                        locale: "es",
-                        onChange: (sel) => { if(sel.length) setSelectedDate(sel[0]); }
-                    });
-                }
-            }, []);
-
-            // Generate Chart Data on Date/Tolvas Change
-            useEffect(() => {
-                if(tolvas.length === 0) return;
-                resetSeed(getSeedFromDate(selectedDate));
-                const newData = [];
-                const tolvaState = {};
-                tolvas.forEach(t => {
-                    tolvaState[t.id] = { weight: pseudoRandom() * 5000, status: pseudoRandom() > 0.5 ? 'loading' : 'idle', maxCap: 28000 };
-                });
-
-                for (let i = 0; i < 96; i++) { // 15 min intervals
-                    const hour = Math.floor(i / 4).toString().padStart(2, '0');
-                    const minute = ((i % 4) * 15).toString().padStart(2, '0');
-                    const row = { time: `${hour}:${minute}` };
-                    tolvas.forEach(t => {
-                        const s = tolvaState[t.id];
-                        let change = 0;
-                        if (s.status === 'loading') {
-                            change = 800 + pseudoRandom() * 1200;
-                            if (s.weight + change >= s.maxCap) { s.weight = s.maxCap; s.status = 'unloading'; }
-                            else { s.weight += change; if (pseudoRandom() > 0.9) s.status = 'idle'; }
-                        } else if (s.status === 'unloading') {
-                            change = -(2500 + pseudoRandom() * 2000);
-                            if (s.weight + change <= 0) { s.weight = 0; s.status = 'idle'; }
-                            else { s.weight += change; }
-                        } else {
-                            change = (pseudoRandom() - 0.5) * 50;
-                            s.weight += change;
-                            if (pseudoRandom() > 0.8) s.status = s.weight < 1000 ? 'loading' : 'unloading';
-                        }
-                        if(s.weight < 0) s.weight = 0;
-                        row[`${t.id}_weight`] = Math.round(s.weight);
-                        row[`${t.id}_active`] = Math.abs(change) > 100 ? 1 : 0;
-                    });
-                    newData.push(row);
-                }
-                setChartData(newData);
-            }, [selectedDate, tolvas]);
-
-            // Render Chart
-            useEffect(() => {
-                if(!weightChartRef.current || chartData.length === 0) return;
-                if(weightChartInstance.current) weightChartInstance.current.destroy();
-
-                const activeTolvas = tolvas.filter(t => selectedIds.includes(t.id));
-                const datasets = activeTolvas.map(t => ({
-                    label: t.name,
-                    data: chartData.map(d => d[`${t.id}_weight`]),
-                    borderColor: t.color,
-                    backgroundColor: t.color + '20',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    tension: 0.1
-                }));
-
-                weightChartInstance.current = new Chart(weightChartRef.current, {
-                    type: 'line',
-                    data: { labels: chartData.map(d => d.time), datasets },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            x: { ticks: { maxTicksLimit: 12, color: '#94a3b8' }, grid: { display: false } },
-                            y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#e2e8f0' } }
-                        },
-                        plugins: { legend: { labels: { color: '#475569' } } }
-                    }
-                });
-            }, [chartData, selectedIds, tolvas]);
-
-            // Logic
-            const filteredTolvas = tolvas.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()) || t.code.includes(searchTerm));
-            const paginatedTolvas = filteredTolvas.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-            const totalPages = Math.ceil(filteredTolvas.length / itemsPerPage);
-
-            const toggleSelection = (id) => {
-                setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-            };
-
-            const handleModeToggle = (id) => {
-                setTolvas(prev => prev.map(t => t.id === id ? { ...t, mode: t.mode === 'auto' ? 'manual' : 'auto' } : t));
-            };
-
-            const openCalib = (t) => { setCurrentTolva(t); setCalibrationModalOpen(true); };
-            
-            const handleEditSave = (id, field, val) => {
-                setTolvas(prev => prev.map(t => t.id === id ? { ...t, [field]: val } : t));
-                setEditingCell(null);
-            };
-            
-            const handleModelChange = (id, newBrand, newCap) => {
-                const newModel = `${newBrand}-${newCap}`;
-                handleEditSave(id, 'model', newModel);
-                setActiveModelSelector(null);
-            };
-
-            return (
-                <div className="module-container">
-                    <div className="dashboard-content">
-                        {/* Header Módulo */}
-                        <div className="filters-panel">
-                            <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                                <h2 className="section-title">Gestión de Equipos ({tolvas.length})</h2>
-                                <div className="date-input-wrapper">
-                                    <input type="text" ref={datePickerRef} className="date-input" placeholder="Seleccionar fecha" />
-                                </div>
-                            </div>
-                            
-                            {/* Controles Tabla */}
-                            <div className="filters-row" style={{justifyContent:'space-between'}}>
-                                <div className="search-input-wrapper" style={{maxWidth:'300px'}}>
-                                    <i className="ph ph-magnifying-glass search-icon"></i>
-                                    <input type="text" className="search-input" placeholder="Buscar tolva..." value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }} />
-                                </div>
-                                <div className="btn-group">
-                                    <button className="btn-group-item" disabled={currentPage===1} onClick={()=>setCurrentPage(p=>p-1)}><Icons.ChevronLeft/></button>
-                                    <span style={{padding:'0 1rem', display:'flex', alignItems:'center', fontSize:'0.85rem'}}>{currentPage} / {totalPages || 1}</span>
-                                    <button className="btn-group-item" disabled={currentPage===totalPages || totalPages===0} onClick={()=>setCurrentPage(p=>p+1)}><Icons.ChevronRight/></button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Tabla Tolvas */}
-                        <div className="table-wrapper">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th style={{width:40}}>Ver</th>
-                                        <th>Código</th>
-                                        <th>Nombre (Click para editar)</th>
-                                        <th>Modelo</th>
-                                        <th className="text-center">Versión</th>
-                                        <th className="text-center">Modo</th>
-                                        <th className="text-center">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {paginatedTolvas.map(t => (
-                                        <tr key={t.id} style={selectedIds.includes(t.id) ? {backgroundColor:'var(--group-row-bg)'} : {}}>
-                                            <td className="text-center"><input type="checkbox" checked={selectedIds.includes(t.id)} onChange={() => toggleSelection(t.id)}/></td>
-                                            <td style={{fontFamily:'monospace', fontWeight:600}}>{t.code}</td>
-                                            <td onClick={() => setEditingCell({id: t.id, field:'name', val: t.name})} style={{cursor:'pointer'}}>
-                                                {editingCell?.id === t.id && editingCell?.field === 'name' ? (
-                                                    <input autoFocus className="form-input" style={{height:28}} value={editingCell.val} onChange={e=>setEditingCell({...editingCell, val:e.target.value})} onBlur={()=>handleEditSave(t.id, 'name', editingCell.val)} onKeyDown={e=>e.key==='Enter'&&handleEditSave(t.id, 'name', editingCell.val)} />
-                                                ) : (
-                                                    <div style={{display:'flex', alignItems:'center', gap:6}}>
-                                                        {t.name} <Icons.Edit2 size={12} style={{opacity:0.3}}/>
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td style={{position:'relative'}}>
-                                                <div onClick={() => setActiveModelSelector(activeModelSelector === t.id ? null : t.id)} style={{cursor:'pointer', fontWeight:600, color:'var(--text-light)', display:'flex', alignItems:'center', gap:4}}>
-                                                    {t.model} <Icons.ChevronDown size={12}/>
-                                                </div>
-                                                {activeModelSelector === t.id && (
-                                                    <div className="custom-options open" style={{width:180}}>
-                                                        {Object.keys(BRANDS_DATA).map(brand => (
-                                                            <div key={brand} style={{padding:'4px 8px', fontSize:'0.75rem', fontWeight:'bold', background:'var(--bg-body)'}}>{brand}</div>
-                                                        ))}
-                                                        <div className="option-item" onClick={() => handleModelChange(t.id, 'AKRON', '28')}>AKRON-28</div>
-                                                        <div className="option-item" onClick={() => handleModelChange(t.id, 'CESTARI', '22')}>CESTARI-22</div>
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td className="text-center"><span className="val-badge val-ok">v{t.linkVersion}</span></td>
-                                            <td className="text-center">
-                                                <div onClick={() => handleModeToggle(t.id)} style={{cursor:'pointer', display:'inline-flex', alignItems:'center', gap:6, padding:'2px 8px', borderRadius:12, background: t.mode==='auto'?'#dcfce7':'#e2e8f0', color: t.mode==='auto'?'#166534':'#64748b', fontSize:'0.75rem', fontWeight:600}}>
-                                                    {t.mode === 'auto' ? 'AUTO' : 'MANUAL'}
-                                                </div>
-                                            </td>
-                                            <td className="text-center">
-                                                <button className="btn-icon" onClick={() => openCalib(t)} title="Calibración"><Icons.Settings size={18}/></button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* Gráficos */}
-                        {selectedIds.length > 0 ? (
-                            <div className="charts-grid-tolva">
-                                {/* Timeline */}
-                                <div className="stat-box" style={{height:'auto', minHeight:250}}>
-                                    <h4>Actividad Diaria</h4>
-                                    <div className="list-container" style={{overflowX:'auto'}}>
-                                        {tolvas.filter(t => selectedIds.includes(t.id)).map(t => {
-                                            const timeline = chartData.map(d => d[`${t.id}_active`]);
-                                            return (
-                                                <div key={t.id} className="timeline-row">
-                                                    <div className="timeline-label" title={t.name}>{t.name}</div>
-                                                    <div className="timeline-track">
-                                                        {[0,6,12,18].map(h => <div key={h} className="timeline-hour-marker" style={{left: `${(h/24)*100}%`}}></div>)}
-                                                        {timeline.map((active, idx) => (
-                                                            <div key={idx} className="timeline-segment" style={{width:`${100/96}%`, backgroundColor: active ? t.color : 'transparent'}}></div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                        <div style={{display:'flex', justifyContent:'center', gap:'1rem', fontSize:'0.75rem', color:'var(--text-light)', marginTop:'0.5rem'}}>
-                                            <div style={{display:'flex', alignItems:'center', gap:4}}><div style={{width:10, height:10, background:'#e2e8f0'}}></div> Inactivo</div>
-                                            <div style={{display:'flex', alignItems:'center', gap:4}}><div style={{width:10, height:10, background:'var(--primary)'}}></div> Operativo</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                {/* Weight Chart */}
-                                <div className="stat-box" style={{height:400}}>
-                                    <h4>Evolución de Carga (Kg)</h4>
-                                    <div className="canvas-container">
-                                        <canvas ref={weightChartRef}></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="stat-box" style={{display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-light)'}}>
-                                <p>Seleccione al menos una tolva para ver estadísticas.</p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Modal Calibración */}
-                    {calibrationModalOpen && currentTolva && (
-                        <div className="modal-overlay" style={{opacity:1, pointerEvents:'all'}}>
-                            <div className="modal-card">
-                                <div className="modal-header">
-                                    <h3>Calibración: {currentTolva.model}</h3>
-                                    <button className="btn-icon" onClick={() => setCalibrationModalOpen(false)}><Icons.X/></button>
-                                </div>
-                                <div className="modal-body">
-                                    <div className="form-grid" style={{gridTemplateColumns:'1fr 1fr 1fr', padding:0, gap:'0.5rem'}}>
-                                        <div style={{background:'var(--bg-body)', padding:'0.5rem', borderRadius:6, textAlign:'center'}}>
-                                            <div style={{fontSize:'0.7rem', color:'var(--text-light)'}}>Sensibilidad</div>
-                                            <div style={{fontSize:'1.1rem', fontWeight:700}}>1850</div>
-                                        </div>
-                                        <div style={{background:'var(--bg-body)', padding:'0.5rem', borderRadius:6, textAlign:'center'}}>
-                                            <div style={{fontSize:'0.7rem', color:'var(--text-light)'}}>Celdas</div>
-                                            <div style={{fontSize:'1.1rem', fontWeight:700}}>80k</div>
-                                        </div>
-                                        <div style={{background:'var(--bg-body)', padding:'0.5rem', borderRadius:6, textAlign:'center'}}>
-                                            <div style={{fontSize:'0.7rem', color:'var(--text-light)'}}>Ventana</div>
-                                            <div style={{fontSize:'1.1rem', fontWeight:700}}>10</div>
-                                        </div>
-                                    </div>
-                                    <h4 style={{fontSize:'0.9rem', fontWeight:600, marginTop:'1rem', marginBottom:'0.5rem'}}>Historial</h4>
-                                    <table style={{width:'100%', fontSize:'0.8rem', borderCollapse:'collapse'}}>
-                                        <thead style={{background:'var(--bg-body)', textAlign:'left'}}>
-                                            <tr><th style={{padding:8}}>Fecha</th><th>Sens.</th><th>Celdas</th></tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr><td style={{padding:8, borderBottom:'1px solid var(--border)'}}>01/11/2023</td><td style={{borderBottom:'1px solid var(--border)'}}>1850</td><td style={{borderBottom:'1px solid var(--border)'}}>80000</td></tr>
-                                            <tr><td style={{padding:8, borderBottom:'1px solid var(--border)'}}>15/06/2023</td><td style={{borderBottom:'1px solid var(--border)'}}>1845</td><td style={{borderBottom:'1px solid var(--border)'}}>80000</td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div className="modal-footer">
-                                    <button className="btn btn-outline" onClick={() => setCalibrationModalOpen(false)}>Cerrar</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
-        };
-
-        // --- COMPONENTES: DESCARGAS, ESTABLECIMIENTOS ---
+        // --- MODULES: DOWNLOADS, ESTABLISHMENTS ---
+        // Downloads Module
         const DownloadsModule = () => {
             const URL_MANIAGRO = "https://docs.google.com/spreadsheets/d/1IDhJ8E7h5d7ezknTK-BaJkF66ydHAy4zZAv4FLl9u0k/edit?usp=sharing";
             const CHART_COLORS = ['#204B42', '#10b981', '#f59e0b', '#3b82f6', '#64748b', '#ef4444', '#8b5cf6'];
             const GROUP_DIMS = [{ key: 'DESTINO DESCARGA', label: 'Destino' }, { key: 'FECHA PESADA', label: 'Fecha' }, { key: 'ESTABLECIMIENTO', label: 'Establecimiento' }, { key: 'LOTE', label: 'Lote' }, { key: 'PRODUCTO', label: 'Producto' }, { key: 'PRODUCTOR', label: 'Productor' }, { key: 'CONTRATISTA', label: 'Contratista' }, { key: 'TOLVA', label: 'Tolva' }];
-
             const [data, setData] = useState([]);
             const [loading, setLoading] = useState(true);
             const [displayUnit, setDisplayUnit] = useState('TON'); 
@@ -721,73 +396,23 @@
             const [hideLow, setHideLow] = useState(true);
             const [isQuickGroup, setIsQuickGroup] = useState(false);
             const [groupOptionsOpen, setGroupOptionsOpen] = useState(false);
-            
             const [colConfig, setColConfig] = useState({ 'VALIDACION': { label: 'Validación', visible: false, dimensionKey: 'VALIDACION' }, 'STATUS': { label: 'Estado', visible: true, width: '50px' }, 'FECHA PESADA': { label: 'Fecha', visible: true, dimensionKey: 'FECHA PESADA' }, 'HORA PESADA': { label: 'Hora', visible: true, dimensionKey: 'HORA PESADA' }, 'PRODUCTOR': { label: 'Productor', visible: false, dimensionKey: 'PRODUCTOR' }, 'CONTRATISTA': { label: 'Contratista', visible: true, dimensionKey: 'CONTRATISTA' }, 'ESTABLECIMIENTO': { label: 'Establecimiento', visible: true, dimensionKey: 'ESTABLECIMIENTO' }, 'LOTE': { label: 'Lote', visible: true, dimensionKey: 'LOTE' }, 'PRODUCTO': { label: 'Producto', visible: true, dimensionKey: 'PRODUCTO' }, 'DESTINO DESCARGA': { label: 'Destino', visible: true, dimensionKey: 'DESTINO DESCARGA' }, 'CARTA DE PORTE': { label: 'Carta Porte', visible: false, dimensionKey: 'CARTA DE PORTE' }, 'PESO_NUM': { label: 'Kg Húmedo', visible: true, align: 'right' }, 'TOLVA': { label: 'Tolva', visible: true, dimensionKey: 'TOLVA' }, 'ACTIONS': { label: '', visible: true, width: '1%' }, 'UBICACION': { label: 'Ubic.', visible: true, align: 'center', width: '1%' } });
             const [filters, setFilters] = useState({ est: [], lote: [], prod: [], productor: [], contratista: [], tolva: [], search: '', dateFrom: null, dateTo: null });
             const [showMap, setShowMap] = useState(false);
             const [importUrl, setImportUrl] = useState(URL_MANIAGRO);
             const [showImportModal, setShowImportModal] = useState(false);
             const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-
             const chartEstRef = useRef(null), chartProdRef = useRef(null), mapRef = useRef(null), mapInstance = useRef(null), chartInstances = useRef({}), dateFromRef = useRef(null), dateToRef = useRef(null), fpFromInstance = useRef(null), fpToInstance = useRef(null);
-
             useEffect(() => { loadData(importUrl); }, [importUrl]);
-            const loadData = async (url) => {
-                setLoading(true);
-                try {
-                    const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-                    const csvUrl = match ? `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv` : url;
-                    const res = await fetch(csvUrl); const text = await res.text(); const parsed = parseCSV(text); setData(parsed);
-                    const dates = parsed.map(d => d.DATE_OBJ).filter(Boolean);
-                    if (dates.length > 0) {
-                        const maxDate = new Date(Math.max.apply(null, dates));
-                        setFilters(prev => ({...prev, dateFrom: maxDate, dateTo: maxDate}));
-                        if(fpFromInstance.current) fpFromInstance.current.setDate(maxDate);
-                        if(fpToInstance.current) fpToInstance.current.setDate(maxDate);
-                    }
-                } catch (e) { console.error(e); } finally { setLoading(false); }
-            };
-            useEffect(() => {
-                if (dateFromRef.current) fpFromInstance.current = flatpickr(dateFromRef.current, { dateFormat: "d/m/Y", onChange: (sel) => setFilters(f => ({...f, dateFrom: sel[0]})) });
-                if (dateToRef.current) fpToInstance.current = flatpickr(dateToRef.current, { dateFormat: "d/m/Y", onChange: (sel) => setFilters(f => ({...f, dateTo: sel[0]})) });
-            }, []);
-            const parseCSV = (csv) => {
-                const lines = csv.split('\n'); if(lines.length < 2) return []; const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-                return lines.slice(1).map((line, idx) => { if(!line.trim()) return null; const vals = parseCSVLine(line); const row = { id: idx }; headers.forEach((h, i) => row[h] = vals[i]?.trim().replace(/^"|"$/g, '') || ''); row.PESO_NUM = parseFloat(row['PESO HUMEDO Kg']) || 0; row.DATE_OBJ = parseDateStrict(row['FECHA PESADA']); row.LAT_NUM = parseFloat(row['LATITUD']) || 0; row.LNG_NUM = parseFloat(row['LONGITUD']) || 0; const tipo = (row['TIPO'] || '').toUpperCase(); row.IS_DEFECT = tipo.includes('DEFECTUOSA'); row.IS_OVERWEIGHT = row.PESO_NUM > 30000; row.IS_AUTO = tipo.includes('AUT') || tipo.includes('MODIFICADA'); row.IS_VALID = (row['VALIZACION'] && row['VALIZACION'].toUpperCase() === 'TRUE'); return row; }).filter(Boolean);
-            };
+            const loadData = async (url) => { setLoading(true); try { const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/); const csvUrl = match ? `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=csv` : url; const res = await fetch(csvUrl); const text = await res.text(); const parsed = parseCSV(text); setData(parsed); const dates = parsed.map(d => d.DATE_OBJ).filter(Boolean); if (dates.length > 0) { const maxDate = new Date(Math.max.apply(null, dates)); setFilters(prev => ({...prev, dateFrom: maxDate, dateTo: maxDate})); if(fpFromInstance.current) fpFromInstance.current.setDate(maxDate); if(fpToInstance.current) fpToInstance.current.setDate(maxDate); } } catch (e) { console.error(e); } finally { setLoading(false); } };
+            useEffect(() => { if (dateFromRef.current) fpFromInstance.current = flatpickr(dateFromRef.current, { dateFormat: "d/m/Y", onChange: (sel) => setFilters(f => ({...f, dateFrom: sel[0]})) }); if (dateToRef.current) fpToInstance.current = flatpickr(dateToRef.current, { dateFormat: "d/m/Y", onChange: (sel) => setFilters(f => ({...f, dateTo: sel[0]})) }); }, []);
+            const parseCSV = (csv) => { const lines = csv.split('\n'); if(lines.length < 2) return []; const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '')); return lines.slice(1).map((line, idx) => { if(!line.trim()) return null; const vals = parseCSVLine(line); const row = { id: idx }; headers.forEach((h, i) => row[h] = vals[i]?.trim().replace(/^"|"$/g, '') || ''); row.PESO_NUM = parseFloat(row['PESO HUMEDO Kg']) || 0; row.DATE_OBJ = parseDateStrict(row['FECHA PESADA']); row.LAT_NUM = parseFloat(row['LATITUD']) || 0; row.LNG_NUM = parseFloat(row['LONGITUD']) || 0; const tipo = (row['TIPO'] || '').toUpperCase(); row.IS_DEFECT = tipo.includes('DEFECTUOSA'); row.IS_OVERWEIGHT = row.PESO_NUM > 30000; row.IS_AUTO = tipo.includes('AUT') || tipo.includes('MODIFICADA'); row.IS_VALID = (row['VALIZACION'] && row['VALIZACION'].toUpperCase() === 'TRUE'); return row; }).filter(Boolean); };
             const parseCSVLine = (text) => { let p = '', row = [''], i = 0, r = 0, s = !0, l; for (l of text) { if ('"' === l) { if (s && l === p) row[r] += l; s = !s; } else if (',' === l && s) l = row[++r] = ''; else row[r] += l; p = l; } return row; };
             const parseDateStrict = (str) => { if(!str) return null; const parts = str.replace(/-/g, '/').split('/'); if (parts.length !== 3) return null; let d, m, y; if(parts[0].length === 4) { y=+parts[0]; m=+parts[1]-1; d=+parts[2]; } else { d=+parts[0]; m=+parts[1]-1; y=+parts[2]; } return new Date(y, m, d); };
-            const filteredData = useMemo(() => {
-                return data.filter(r => {
-                    if (hideLow && r.PESO_NUM < 100) return false;
-                    if (filters.dateFrom && r.DATE_OBJ) { const d = new Date(r.DATE_OBJ); d.setHours(0,0,0,0); const f = new Date(filters.dateFrom); f.setHours(0,0,0,0); if (d < f) return false; }
-                    if (filters.dateTo && r.DATE_OBJ) { const d = new Date(r.DATE_OBJ); d.setHours(0,0,0,0); const f = new Date(filters.dateTo); f.setHours(23,59,59,999); if (d > f) return false; }
-                    if (filters.est.length && !filters.est.includes(r['ESTABLECIMIENTO'])) return false; if (filters.lote.length && !filters.lote.includes(r['LOTE'])) return false; if (filters.prod.length && !filters.prod.includes(r['PRODUCTO'])) return false; if (filters.productor.length && !filters.productor.includes(r['PRODUCTOR'])) return false; if (filters.tolva.length && !filters.tolva.includes(r['TOLVA'])) return false; if (filters.contratista.length && !filters.contratista.includes(r['CONTRATISTA'])) return false;
-                    if (filters.search && !r['DESTINO DESCARGA'].toLowerCase().includes(filters.search.toLowerCase())) return false;
-                    const dest = (r['DESTINO DESCARGA'] || '').toUpperCase(); const isSilo = dest.includes('BOLSA') || dest.includes('SILO') || /^\d{2}-[A-Z]/.test(dest);
-                    if (filterDestType === 'SILO' && !isSilo) return false; if (filterDestType === 'TRUCK' && isSilo) return false;
-                    return true;
-                });
-            }, [data, filters, hideLow, filterDestType]);
-            const displayData = useMemo(() => {
-                let result = [];
-                if (groupByKeys.length === 0) { result = [...filteredData]; } else {
-                    const groups = {}; filteredData.forEach(r => { const key = groupByKeys.map(k => r[k] || '-').join('|'); if (!groups[key]) { groups[key] = { isGroup: true, count: 0, PESO_NUM: 0, items: [], ...Object.fromEntries(groupByKeys.map(k => [k, r[k]])) }; } groups[key].PESO_NUM += r.PESO_NUM; groups[key].count++; groups[key].items.push(r); }); result = Object.values(groups);
-                }
-                if (sortConfig.key) { result.sort((a,b) => { let valA = a[sortConfig.key], valB = b[sortConfig.key]; if (sortConfig.key.includes('FECHA')) { valA = a.DATE_OBJ?a.DATE_OBJ.getTime():0; valB = b.DATE_OBJ?b.DATE_OBJ.getTime():0; } else if(typeof valA==='string'){ valA=valA.toLowerCase(); valB=valB?valB.toLowerCase():''; } if (valA < valB) return sortConfig.direction==='asc'?-1:1; if (valA > valB) return sortConfig.direction==='asc'?1:-1; return 0; }); }
-                return result;
-            }, [filteredData, groupByKeys, sortConfig]);
+            const filteredData = useMemo(() => { return data.filter(r => { if (hideLow && r.PESO_NUM < 100) return false; if (filters.dateFrom && r.DATE_OBJ) { const d = new Date(r.DATE_OBJ); d.setHours(0,0,0,0); const f = new Date(filters.dateFrom); f.setHours(0,0,0,0); if (d < f) return false; } if (filters.dateTo && r.DATE_OBJ) { const d = new Date(r.DATE_OBJ); d.setHours(0,0,0,0); const f = new Date(filters.dateTo); f.setHours(23,59,59,999); if (d > f) return false; } if (filters.est.length && !filters.est.includes(r['ESTABLECIMIENTO'])) return false; if (filters.lote.length && !filters.lote.includes(r['LOTE'])) return false; if (filters.prod.length && !filters.prod.includes(r['PRODUCTO'])) return false; if (filters.productor.length && !filters.productor.includes(r['PRODUCTOR'])) return false; if (filters.tolva.length && !filters.tolva.includes(r['TOLVA'])) return false; if (filters.contratista.length && !filters.contratista.includes(r['CONTRATISTA'])) return false; if (filters.search && !r['DESTINO DESCARGA'].toLowerCase().includes(filters.search.toLowerCase())) return false; const dest = (r['DESTINO DESCARGA'] || '').toUpperCase(); const isSilo = dest.includes('BOLSA') || dest.includes('SILO') || /^\d{2}-[A-Z]/.test(dest); if (filterDestType === 'SILO' && !isSilo) return false; if (filterDestType === 'TRUCK' && isSilo) return false; return true; }); }, [data, filters, hideLow, filterDestType]);
+            const displayData = useMemo(() => { let result = []; if (groupByKeys.length === 0) { result = [...filteredData]; } else { const groups = {}; filteredData.forEach(r => { const key = groupByKeys.map(k => r[k] || '-').join('|'); if (!groups[key]) { groups[key] = { isGroup: true, count: 0, PESO_NUM: 0, items: [], ...Object.fromEntries(groupByKeys.map(k => [k, r[k]])) }; } groups[key].PESO_NUM += r.PESO_NUM; groups[key].count++; groups[key].items.push(r); }); result = Object.values(groups); } if (sortConfig.key) { result.sort((a,b) => { let valA = a[sortConfig.key], valB = b[sortConfig.key]; if (sortConfig.key.includes('FECHA')) { valA = a.DATE_OBJ?a.DATE_OBJ.getTime():0; valB = b.DATE_OBJ?b.DATE_OBJ.getTime():0; } else if(typeof valA==='string'){ valA=valA.toLowerCase(); valB=valB?valB.toLowerCase():''; } if (valA < valB) return sortConfig.direction==='asc'?-1:1; if (valA > valB) return sortConfig.direction==='asc'?1:-1; return 0; }); } return result; }, [filteredData, groupByKeys, sortConfig]);
             const getAggregatedData = (data, key) => { const map = {}; data.forEach(r => { const k = r[key] || 'Sin Datos'; map[k] = (map[k] || 0) + r.PESO_NUM; }); return Object.entries(map).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value); };
-            useEffect(() => {
-                if (!window.Chart || loading) return;
-                const renderChart = (ref, type, dataArray, label) => {
-                    if (chartInstances.current[ref.id]) chartInstances.current[ref.id].destroy();
-                    const topData = dataArray.slice(0, 15); const labels = topData.map(d => d.label); const values = topData.map(d => displayUnit === 'TON' ? d.value/1000 : d.value);
-                    chartInstances.current[ref.id] = new Chart(ref, { type: type, data: { labels, datasets: [{ label, data: values, backgroundColor: CHART_COLORS, borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: type === 'doughnut', position: 'right' } } } });
-                };
-                const estData = getAggregatedData(filteredData, 'ESTABLECIMIENTO'); const prodData = getAggregatedData(filteredData, 'PRODUCTO');
-                if (chartEstRef.current) renderChart(chartEstRef.current, 'bar', estData, 'Totales'); if (chartProdRef.current) renderChart(chartProdRef.current, 'doughnut', prodData, 'Totales');
-            }, [filteredData, displayUnit, loading]);
+            useEffect(() => { if (!window.Chart || loading) return; const renderChart = (ref, type, dataArray, label) => { if (chartInstances.current[ref.id]) chartInstances.current[ref.id].destroy(); const topData = dataArray.slice(0, 15); const labels = topData.map(d => d.label); const values = topData.map(d => displayUnit === 'TON' ? d.value/1000 : d.value); chartInstances.current[ref.id] = new Chart(ref, { type: type, data: { labels, datasets: [{ label, data: values, backgroundColor: CHART_COLORS, borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: type === 'doughnut', position: 'right' } } } }); }; const estData = getAggregatedData(filteredData, 'ESTABLECIMIENTO'); const prodData = getAggregatedData(filteredData, 'PRODUCTO'); if (chartEstRef.current) renderChart(chartEstRef.current, 'bar', estData, 'Totales'); if (chartProdRef.current) renderChart(chartProdRef.current, 'doughnut', prodData, 'Totales'); }, [filteredData, displayUnit, loading]);
             const toggleQuickGroup = () => { if (isQuickGroup) { setGroupByKeys([]); setIsQuickGroup(false); } else { setGroupByKeys(['FECHA PESADA', 'ESTABLECIMIENTO', 'LOTE', 'PRODUCTO', 'DESTINO DESCARGA', 'CONTRATISTA']); setIsQuickGroup(true); } };
             const toggleGroupKey = (key) => { setGroupByKeys(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]); };
             const kpis = useMemo(() => { let truckC = 0, truckW = 0, siloC = 0, siloW = 0; filteredData.forEach(r => { const dest = (r['DESTINO DESCARGA'] || '').toUpperCase(); const isSilo = dest.includes('BOLSA') || dest.includes('SILO') || /^\d{2}-[A-Z]/.test(dest); if (isSilo) { siloC++; siloW += r.PESO_NUM; } else { truckC++; truckW += r.PESO_NUM; } }); return { truckC, truckW, siloC, siloW }; }, [filteredData]);
@@ -797,7 +422,6 @@
             const handleSort = (key) => { setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' })); };
             const CustomSelect = ({ label, options, selected, onChange }) => { const [isOpen, setIsOpen] = useState(false); const [search, setSearch] = useState(''); const filteredOpts = options.filter(o => o.toLowerCase().includes(search.toLowerCase())); return ( <div className="custom-select-wrapper"> <div className="custom-select-trigger" onClick={() => setIsOpen(!isOpen)}> <span>{label} {selected.length > 0 && `(${selected.length})`}</span> <i className="ph ph-caret-down"></i> </div> {isOpen && ( <div className="custom-options open"> <input type="text" className="dropdown-search" placeholder="Buscar..." onClick={e=>e.stopPropagation()} onChange={e=>setSearch(e.target.value)} /> {filteredOpts.map(opt => ( <div key={opt} className="option-item" onClick={(e) => { e.stopPropagation(); onChange(opt, !selected.includes(opt)); }}> <input type="checkbox" checked={selected.includes(opt)} readOnly /> {opt} </div> ))} </div> )} {isOpen && <div style={{position:'fixed', inset:0, zIndex:40}} onClick={() => setIsOpen(false)}></div>} </div> ); };
             const ColConfigDropdown = () => { const [isOpen, setIsOpen] = useState(false); return ( <div className="custom-select-wrapper col-config-wrapper" style={{width:'auto'}}> <div className="custom-select-trigger btn-square" onClick={() => setIsOpen(!isOpen)} title="Configurar Columnas"> <i className="ph ph-gear"></i> </div> {isOpen && ( <div className="custom-options open" style={{right:0, left:'auto', width:200}}> {Object.keys(colConfig).map(key => ( <div key={key} className="option-item" onClick={(e) => { e.stopPropagation(); setColConfig(prev => ({...prev, [key]: {...prev[key], visible: !prev[key].visible}})); }}> <input type="checkbox" checked={colConfig[key].visible} readOnly /> {colConfig[key].label || key} </div> ))} </div> )} {isOpen && <div style={{position:'fixed', inset:0, zIndex:40}} onClick={() => setIsOpen(false)}></div>} </div> ); };
-
             return (
                 <div className="module-container">
                     {loading && <div className="loading-overlay"><div className="spinner"></div><div className="loading-text">Procesando...</div></div>}
@@ -874,6 +498,7 @@
             );
         };
 
+        // Establishment Module
         const EstablishmentConfig = () => {
             const [filterProducer, setFilterProducer] = useState('');
             const [filterEst, setFilterEst] = useState('');
@@ -887,7 +512,6 @@
             const [currentItem, setCurrentItem] = useState(null);
             const [parentId, setParentId] = useState(null);
             const [showAdvanced, setShowAdvanced] = useState(false);
-
             const startEditing = (lot) => { setEditingCell({ id: lot.id, value: lot.hectares }); };
             const saveEditing = (estId, lotId) => {
                 const newValue = parseFloat(editingCell.value); const finalValue = isNaN(newValue) ? 0 : newValue;
@@ -919,7 +543,6 @@
             };
             const filteredData = data.filter(item => { const matchProd = filterProducer ? item.owner.toLowerCase().includes(filterProducer.toLowerCase()) : true; const matchEst = filterEst ? item.name.toLowerCase().includes(filterEst.toLowerCase()) : true; return matchProd && matchEst; });
             const TooltipInfo = () => ( <div className="tooltip-container"> <Icons.Info size={14} color="var(--info)" /> <span className="tooltip-text"> Si está activo, este campo aparecerá disponible para elegir en la tablet. Si está desactivado, no se podrá elegir. </span> </div> );
-
             return (
                 <div className="module-container">
                     <div className="dashboard-content">
@@ -979,7 +602,6 @@
                             </table>
                         </div>
                     </div>
-                    
                     {isModalOpen && (
                         <div className="modal-overlay" style={{opacity:1, pointerEvents:'all'}}>
                             <div className="modal-card">
@@ -1008,6 +630,295 @@
             );
         };
 
+        // Tolvas Module (New Integration)
+        const TolvasModule = () => {
+            const [tolvas, setTolvas] = useState([]);
+            const [selectedIds, setSelectedIds] = useState([]);
+            const [previousSelection, setPreviousSelection] = useState(null); 
+            const [searchTerm, setSearchTerm] = useState('');
+            const [currentPage, setCurrentPage] = useState(1);
+            const [selectedDate, setSelectedDate] = useState(new Date());
+            const [chartData, setChartData] = useState([]);
+            const [calibrationModalOpen, setCalibrationModalOpen] = useState(false);
+            const [currentTolva, setCurrentTolva] = useState(null);
+            const [editingCell, setEditingCell] = useState(null);
+            const [activeModelSelector, setActiveModelSelector] = useState(null);
+            const [tooltip, setTooltip] = useState({ visible: false, text: '', x: 0, y: 0 });
+
+            const datePickerRef = useRef(null);
+            const weightChartRef = useRef(null);
+            const weightChartInstance = useRef(null);
+            const itemsPerPage = 6;
+            
+            // Generate Data Logic
+            const pseudoRandom = () => { let seed = 1; const x = Math.sin(seed++) * 10000; return x - Math.floor(x); };
+            const getSeedFromDate = (date) => parseInt(date.toISOString().slice(0, 10).replace(/-/g, ''), 10);
+            const BRANDS_DATA = { 'AKRON': ['16', '22', '28', '30'], 'CESTARI': ['16', '22', '28', '30'], 'MONTECOR': ['16', '22', '28', '30'] };
+            const TOLVA_COLORS = ['#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed', '#db2777', '#0891b2', '#ea580c', '#65a30d', '#4f46e5'];
+            const CALIBRATION_HISTORY = [{ date: '01/11/2023', sensitivity: 1850, cells: 80000, window: 10 }, { date: '15/06/2023', sensitivity: 1845, cells: 80000, window: 8 }, { date: '10/01/2023', sensitivity: 1800, cells: 60000, window: 8 }];
+
+            useEffect(() => {
+                const brands = Object.keys(BRANDS_DATA);
+                const mockTolvas = Array.from({ length: 20 }, (_, i) => ({
+                    id: `t${i + 1}`,
+                    code: Math.floor(1000 + Math.random() * 9000).toString(),
+                    name: `TOLVA-${i + 1}-${brands[i % brands.length]}-LOTE-${Math.floor(Math.random()*10)}`,
+                    model: `${brands[i % brands.length]}-${BRANDS_DATA[brands[i % brands.length]][0]}`,
+                    linkVersion: i % 3 === 0 ? '5.5' : '5.6',
+                    mode: Math.random() > 0.4 ? 'auto' : 'manual',
+                    color: TOLVA_COLORS[i % TOLVA_COLORS.length]
+                }));
+                setTolvas(mockTolvas);
+                setSelectedIds([mockTolvas[0].id, mockTolvas[1].id]);
+            }, []);
+
+            useEffect(() => {
+                if(datePickerRef.current) {
+                    flatpickr(datePickerRef.current, { dateFormat: "d/m/Y", defaultDate: new Date(), locale: "es", onChange: (sel) => { if(sel.length) setSelectedDate(sel[0]); } });
+                }
+            }, []);
+
+            useEffect(() => {
+                if(tolvas.length === 0) return;
+                let seed = getSeedFromDate(selectedDate);
+                const random = () => { const x = Math.sin(seed++) * 10000; return x - Math.floor(x); };
+                const newData = [];
+                const tolvaState = {};
+                tolvas.forEach(t => { tolvaState[t.id] = { weight: random() * 5000, status: random() > 0.5 ? 'loading' : 'idle', maxCap: 28000 }; });
+
+                for (let i = 0; i < 96; i++) {
+                    const hour = Math.floor(i / 4).toString().padStart(2, '0');
+                    const minute = ((i % 4) * 15).toString().padStart(2, '0');
+                    const row = { time: `${hour}:${minute}` };
+                    tolvas.forEach(t => {
+                        const s = tolvaState[t.id];
+                        let change = 0;
+                        if (s.status === 'loading') { change = 800 + random() * 1200; if (s.weight + change >= s.maxCap) { s.weight = s.maxCap; s.status = 'unloading'; } else { s.weight += change; if (random() > 0.9) s.status = 'idle'; } } 
+                        else if (s.status === 'unloading') { change = -(2500 + random() * 2000); if (s.weight + change <= 0) { s.weight = 0; s.status = 'idle'; } else { s.weight += change; } } 
+                        else { change = (random() - 0.5) * 50; s.weight += change; if (random() > 0.8) s.status = s.weight < 1000 ? 'loading' : 'unloading'; }
+                        if(s.weight < 0) s.weight = 0;
+                        row[`${t.id}_weight`] = Math.round(s.weight);
+                        row[`${t.id}_active`] = Math.abs(change) > 100 ? 1 : 0;
+                    });
+                    newData.push(row);
+                }
+                setChartData(newData);
+            }, [selectedDate, tolvas]);
+
+            useEffect(() => {
+                if(!weightChartRef.current || chartData.length === 0) return;
+                if(weightChartInstance.current) weightChartInstance.current.destroy();
+
+                const active = tolvas.filter(t => selectedIds.includes(t.id));
+                const datasets = active.map(t => ({
+                    label: t.name,
+                    data: chartData.map(d => d[`${t.id}_weight`]),
+                    borderColor: t.color,
+                    backgroundColor: t.color + '20',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    tension: 0.1,
+                    hidden: previousSelection && !selectedIds.includes(t.id) 
+                }));
+
+                weightChartInstance.current = new Chart(weightChartRef.current, {
+                    type: 'line',
+                    data: { labels: chartData.map(d => d.time), datasets },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: { x: { ticks: { maxTicksLimit: 12, color: '#94a3b8' }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: '#94a3b8' }, grid: { color: '#e2e8f0' } } },
+                        plugins: { 
+                            legend: { 
+                                labels: { color: '#475569' },
+                                onClick: (e, item) => {
+                                    const tId = active[item.datasetIndex].id;
+                                    if (previousSelection) { setSelectedIds(previousSelection); setPreviousSelection(null); } 
+                                    else { setPreviousSelection(selectedIds); setSelectedIds([tId]); } 
+                                }
+                            },
+                            tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()} kg` } }
+                        }
+                    }
+                });
+            }, [chartData, selectedIds, tolvas, previousSelection]);
+
+            const filteredTolvas = tolvas.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()) || t.code.includes(searchTerm));
+            const paginatedTolvas = filteredTolvas.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+            const totalPages = Math.ceil(filteredTolvas.length / itemsPerPage);
+            const activeTolvas = tolvas.filter(t => selectedIds.includes(t.id));
+
+            const handleUpdate = (id, field, val) => { setTolvas(prev => prev.map(t => t.id === id ? { ...t, [field]: val } : t)); setEditingCell(null); };
+            const showTooltip = (e, text) => { const rect = e.currentTarget.getBoundingClientRect(); setTooltip({ visible: true, text, x: rect.left + (rect.width/2), y: rect.top }); };
+            const hideTooltip = () => setTooltip(t => ({...t, visible: false}));
+            const isToday = (date) => { const today = new Date(); return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear(); };
+
+            return (
+                <div className="module-container">
+                    <div className="dashboard-content">
+                        <div className="filters-panel">
+                            <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:'1rem'}}>
+                                <div>
+                                    <div style={{display:'flex', alignItems:'center', fontSize:'0.85rem', color:'var(--text-light)', marginBottom:'0.5rem'}}> <span>Configuración</span> <Icons.ChevronRight size={14} style={{margin:'0 4px'}}/> <span style={{fontWeight:600, color:'var(--text-main)'}}>Tolvas</span> </div>
+                                    <h2 className="section-title" style={{fontSize:'1.5rem'}}>Gestión de Equipos</h2>
+                                    <p style={{color:'var(--text-light)', fontSize:'0.9rem', marginTop:'0.2rem'}}>Administra la flota de {tolvas.length} monotolvas registradas.</p>
+                                </div>
+                            </div>
+                            <div className="filters-row" style={{justifyContent:'space-between', background:'var(--bg-body)', padding:'1rem', borderRadius:8, border:'1px solid var(--border)'}}>
+                                <div className="search-input-wrapper" style={{maxWidth:'300px'}}> <i className="ph ph-magnifying-glass search-icon"></i> <input type="text" className="search-input" placeholder="Buscar..." value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }} /> </div>
+                                <div className="btn-group">
+                                    <button className="btn-group-item" disabled={currentPage===1} onClick={()=>setCurrentPage(p=>p-1)}><Icons.ChevronLeft/></button>
+                                    <span style={{padding:'0 1rem', display:'flex', alignItems:'center', fontSize:'0.85rem', color:'var(--text-light)'}}>{currentPage} / {totalPages || 1}</span>
+                                    <button className="btn-group-item" disabled={currentPage===totalPages || totalPages===0} onClick={()=>setCurrentPage(p=>p+1)}><Icons.ChevronRight/></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style={{width:50, textAlign:'center'}}></th>
+                                        <th>Cód. Balanza</th>
+                                        <th>Nombre Identificador</th>
+                                        <th>Modelo</th>
+                                        <th className="text-center">Versión</th>
+                                        <th className="text-center">Modo Operación</th>
+                                        <th className="text-center">Calibración</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {paginatedTolvas.map(t => (
+                                        <tr key={t.id} style={selectedIds.includes(t.id) ? {backgroundColor:'var(--group-row-bg)'} : {}}>
+                                            <td className="text-center"><input type="checkbox" checked={selectedIds.includes(t.id)} onChange={() => setSelectedIds(prev => prev.includes(t.id) ? prev.filter(x=>x!==t.id) : [...prev, t.id])} /></td>
+                                            <td style={{fontFamily:'monospace', fontWeight:700}}>{t.code}</td>
+                                            <td style={{maxWidth:250, cursor:'pointer'}} onClick={() => setEditingCell({id:t.id, field:'name', val:t.name})}>
+                                                {editingCell?.id===t.id && editingCell.field==='name' ? 
+                                                    <input autoFocus className="form-input" style={{height:30}} value={editingCell.val} onChange={e=>setEditingCell({...editingCell, val:e.target.value})} onBlur={()=>handleUpdate(t.id, 'name', editingCell.val)} onKeyDown={e=>e.key==='Enter'&&handleUpdate(t.id, 'name', editingCell.val)} />
+                                                    : <div style={{display:'flex', alignItems:'center', gap:6, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{t.name} <Icons.Edit2 size={12} style={{opacity:0.3}}/></div>
+                                                }
+                                            </td>
+                                            <td style={{position:'relative', minWidth:140}}>
+                                                <div onClick={() => setActiveModelSelector(activeModelSelector === t.id ? null : t.id)} style={{cursor:'pointer', fontWeight:700, color:'var(--text-main)', display:'flex', alignItems:'center', gap:4, fontSize:'0.9rem'}}>
+                                                    {t.model} <span style={{fontSize:'0.65rem', color:'var(--text-light)', fontWeight:400}}>Cambiar</span>
+                                                </div>
+                                                {activeModelSelector === t.id && (
+                                                    <div className="custom-options open" style={{width:160}}>
+                                                        {Object.keys(BRANDS_DATA).map(brand => (
+                                                            <React.Fragment key={brand}>
+                                                                <div style={{padding:'4px 8px', fontSize:'0.7rem', fontWeight:'bold', background:'var(--bg-body)', color:'var(--text-light)'}}>{brand}</div>
+                                                                {BRANDS_DATA[brand].map(cap => (
+                                                                    <div key={cap} className="option-item" onClick={() => { handleUpdate(t.id, 'model', `${brand}-${cap}`); setActiveModelSelector(null); }}>{cap} TN</div>
+                                                                ))}
+                                                            </React.Fragment>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                                {activeModelSelector === t.id && <div style={{position:'fixed', inset:0, zIndex:40}} onClick={() => setActiveModelSelector(null)}></div>}
+                                            </td>
+                                            <td className="text-center"><span className="val-badge val-ok" style={{background:'var(--bg-body)', border:'1px solid var(--border)'}}>v{t.linkVersion}</span></td>
+                                            <td className="text-center">
+                                                <div onClick={() => handleUpdate(t.id, 'mode', t.mode==='auto'?'manual':'auto')} 
+                                                     onMouseEnter={(e) => showTooltip(e, t.mode === 'auto' ? 'Sensor Activo: Detecta carga automáticamente.' : 'Modo Manual: Requiere intervención del operario.')}
+                                                     onMouseLeave={hideTooltip}
+                                                     style={{cursor:'pointer', display:'inline-flex', alignItems:'center', gap:6, padding:'2px 10px', borderRadius:16, background: t.mode==='auto'?'#dcfce7':'#e2e8f0', color: t.mode==='auto'?'#166534':'#64748b', fontSize:'0.75rem', fontWeight:600}}>
+                                                    <span style={{width:8, height:8, borderRadius:'50%', background: t.mode==='auto'?'currentColor':'#94a3b8'}}></span> {t.mode === 'auto' ? 'AUTO' : 'MAN'}
+                                                </div>
+                                            </td>
+                                            <td className="text-center"><button className="btn-icon" onClick={()=>{setCurrentTolva(t); setCalibrationModalOpen(true);}} title="Historial Calibración"><Icons.Settings size={18}/></button></td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {activeTolvas.length > 0 ? (
+                            <div className="charts-grid-tolva">
+                                <div className="stat-box" style={{height:'auto', minHeight:300}}>
+                                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1rem'}}>
+                                        <h4 style={{margin:0, display:'flex', alignItems:'center', gap:8}}><Icons.Activity size={18} color="var(--primary)"/> Actividad Diaria (Comparativa)</h4>
+                                        <div style={{display:'flex', alignItems:'center', gap:'1rem'}}>
+                                            <span style={{fontSize:'0.75rem', color:'var(--text-light)'}}>Viendo {activeTolvas.length} equipos</span>
+                                            <div style={{position:'relative'}}>
+                                                <input type="text" ref={datePickerRef} className="form-input" style={{width:110, fontSize:'0.8rem', height:30}} placeholder="DD/MM/AAAA" />
+                                                <div style={{position:'absolute', top:-20, right:0, fontSize:'0.65rem', padding:'0 4px', background: isToday(selectedDate)?'#dcfce7':'#f1f5f9', color: isToday(selectedDate)?'#166534':'#64748b', borderRadius:4, border:'1px solid transparent', borderColor: isToday(selectedDate)?'#bbf7d0':'#e2e8f0'}}>{isToday(selectedDate)?'HOY':'Histórico'}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="list-container">
+                                        {activeTolvas.map(t => {
+                                            const timeline = chartData.map(d => d[`${t.id}_active`]);
+                                            return (
+                                                <div key={t.id} className="timeline-row">
+                                                    <div className="timeline-label" title={t.name}>{t.name}</div>
+                                                    <div className="timeline-track">
+                                                        {[0,6,12,18,24].map(h => <div key={h} className="timeline-hour-marker" style={{left: `${(h/24)*100}%`}}>{h>0 && h<24 ? `${h}h` : ''}</div>)}
+                                                        <div style={{display:'flex', width:'100%', height:'100%'}}>
+                                                            {timeline.map((active, idx) => (
+                                                                <div key={idx} className="timeline-segment" 
+                                                                     style={{width:`${100/96}%`, backgroundColor: active ? t.color : 'transparent', opacity: active ? 0.8 : 1}}
+                                                                     onMouseEnter={(e) => showTooltip(e, `${t.name} - ${chartData[idx].time} - ${active ? 'Operativo' : 'Inactivo'}`)}
+                                                                     onMouseLeave={hideTooltip}
+                                                                ></div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                        <div style={{display:'flex', justifyContent:'center', gap:'1rem', fontSize:'0.75rem', color:'var(--text-light)', marginTop:'0.5rem', borderTop:'1px solid var(--border)', paddingTop:'0.5rem'}}>
+                                            <div style={{display:'flex', alignItems:'center', gap:4}}><div style={{width:10, height:10, background:'var(--bg-body)', border:'1px solid var(--border)'}}></div> Inactivo</div>
+                                            <div style={{display:'flex', alignItems:'center', gap:4}}><div style={{width:10, height:10, background:'var(--text-light)', opacity:0.5}}></div> En Operación</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="stat-box" style={{height:400}}>
+                                    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1rem'}}>
+                                        <h4 style={{margin:0, display:'flex', alignItems:'center', gap:8}}><Icons.BarChart size={18} color="var(--info)"/> Evolución de Carga (Kg)</h4>
+                                        {previousSelection && <button onClick={() => { setSelectedIds(previousSelection); setPreviousSelection(null); }} className="btn btn-outline" style={{height:24, fontSize:'0.7rem'}}>Restaurar Vista Grupal</button>}
+                                    </div>
+                                    <div className="canvas-container"><canvas ref={weightChartRef}></canvas></div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="stat-box" style={{height:200, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', color:'var(--text-light)', borderStyle:'dashed'}}>
+                                <Icons.CloudDownload size={40} style={{opacity:0.2, marginBottom:10}}/>
+                                <p>Sin datos para mostrar</p>
+                                <span style={{fontSize:'0.8rem'}}>Seleccione al menos una tolva en la tabla superior.</span>
+                            </div>
+                        )}
+                    </div>
+                    <div className={`global-tooltip ${tooltip.visible ? 'visible' : ''}`} style={{left: tooltip.x, top: tooltip.y}}>{tooltip.text}</div>
+                    {calibrationModalOpen && currentTolva && (
+                        <div className="modal-overlay" style={{opacity:1, pointerEvents:'all'}}>
+                            <div className="modal-card">
+                                <div className="modal-header" style={{background:'var(--bg-body)'}}>
+                                    <div><h3 style={{margin:0}}>Historial de Calibración</h3><span style={{fontSize:'0.8rem', color:'var(--text-light)'}}>Equipo: {currentTolva.name} ({currentTolva.model})</span></div>
+                                    <button className="btn-icon" onClick={() => setCalibrationModalOpen(false)}><Icons.X/></button>
+                                </div>
+                                <div className="modal-body">
+                                    <div className="form-grid" style={{gridTemplateColumns:'1fr 1fr 1fr', padding:0, gap:'0.5rem', marginBottom:'1rem'}}>
+                                        <div style={{background:'#eff6ff', border:'1px solid #dbeafe', padding:'0.8rem', borderRadius:6, textAlign:'center'}}><div style={{fontSize:'0.65rem', color:'#2563eb', textTransform:'uppercase', fontWeight:700}}>Sensibilidad</div><div style={{fontSize:'1.2rem', fontWeight:700, color:'#1e3a8a'}}>1850</div></div>
+                                        <div style={{background:'#eef2ff', border:'1px solid #e0e7ff', padding:'0.8rem', borderRadius:6, textAlign:'center'}}><div style={{fontSize:'0.65rem', color:'#4f46e5', textTransform:'uppercase', fontWeight:700}}>Celdas</div><div style={{fontSize:'1.2rem', fontWeight:700, color:'#312e81'}}>80k</div></div>
+                                        <div style={{background:'#f5f3ff', border:'1px solid #ede9fe', padding:'0.8rem', borderRadius:6, textAlign:'center'}}><div style={{fontSize:'0.65rem', color:'#7c3aed', textTransform:'uppercase', fontWeight:700}}>Ventana</div><div style={{fontSize:'1.2rem', fontWeight:700, color:'#4c1d95'}}>10</div></div>
+                                    </div>
+                                    <h4 style={{fontSize:'0.85rem', fontWeight:600, color:'var(--text-main)', marginBottom:'0.5rem', display:'flex', alignItems:'center', gap:6}}><Icons.Activity size={14}/> Historial de Cambios</h4>
+                                    <div style={{border:'1px solid var(--border)', borderRadius:8, overflow:'hidden'}}>
+                                        <table style={{width:'100%', fontSize:'0.8rem', borderCollapse:'collapse'}}>
+                                            <thead style={{background:'var(--bg-body)', textAlign:'left', color:'var(--text-light)'}}><tr><th style={{padding:'8px 12px', fontWeight:600}}>Fecha</th><th style={{fontWeight:600}}>Sensibilidad</th><th style={{fontWeight:600}}>Celdas</th><th style={{fontWeight:600}}>V. Móvil</th></tr></thead>
+                                            <tbody>{CALIBRATION_HISTORY.map((c,i) => (<tr key={i} style={{borderTop:'1px solid var(--border)'}}><td style={{padding:'8px 12px', display:'flex', alignItems:'center', gap:6}}><Icons.Check size={12} color="#9ca3af"/> {c.date}</td><td>{c.sensitivity}</td><td>{c.cells}</td><td>{c.window}</td></tr>))}</tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div className="modal-footer"><button className="btn btn-outline" onClick={() => setCalibrationModalOpen(false)}>Cerrar</button></div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // --- APP COMPONENT ---
         const App = () => {
             const [darkMode, setDarkMode] = useState(false);
             const [activeTab, setActiveTab] = useState('descargas');
